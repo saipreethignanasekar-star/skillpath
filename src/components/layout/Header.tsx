@@ -82,13 +82,19 @@ export const Header: React.FC = () => {
           onClick={() => setActiveView('profile')}
           className="flex items-center gap-2.5 p-1 rounded-full hover:bg-[#f1f3f4] transition-colors select-none"
         >
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-[#dadce0]"
-          />
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name || 'User'}
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-[#dadce0]"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center font-medium text-xs ring-1 ring-[#dadce0]">
+              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <span className="hidden md:inline text-xs font-medium text-[#202124] pr-1">
-            {user.name.split(' ')[0]}
+            {user.name ? user.name.split(' ')[0] : 'User'}
           </span>
         </button>
       </div>

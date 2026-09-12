@@ -35,7 +35,21 @@ export const RoadmapPage: React.FC = () => {
 
       {/* Roadmap Timeline */}
       <div className="space-y-4">
-        {roadmapPhases.map((phase: RoadmapPhase) => {
+        {roadmapPhases.length === 0 ? (
+          <div className="bg-white rounded-xl border border-[#dadce0] p-12 text-center shadow-xs space-y-3">
+            <h3 className="text-base font-medium text-[#202124]">No Roadmap Generated Yet</h3>
+            <p className="text-xs text-[#5f6368] max-w-md mx-auto">
+              Select your target career role or upload your resume to generate a custom step-by-step learning roadmap.
+            </p>
+            <button
+              onClick={() => setActiveView('resume-analysis')}
+              className="px-5 py-2.5 bg-[#1a73e8] hover:bg-[#1557d0] text-white rounded-full text-xs font-medium transition-colors shadow-xs"
+            >
+              Upload Resume & Build Roadmap
+            </button>
+          </div>
+        ) : (
+          roadmapPhases.map((phase: RoadmapPhase) => {
           const isPhaseCompleted = phase.status === 'completed';
           const isPhaseActive = phase.status === 'in_progress';
 
@@ -153,7 +167,8 @@ export const RoadmapPage: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
     </div>
   );

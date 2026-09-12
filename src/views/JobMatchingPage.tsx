@@ -67,7 +67,15 @@ export const JobMatchingPage: React.FC = () => {
 
       {/* Job Cards Grid */}
       <div className="space-y-3.5">
-        {filteredJobs.map((job: JobItem) => {
+        {filteredJobs.length === 0 ? (
+          <div className="bg-white rounded-xl border border-[#dadce0] p-12 text-center shadow-xs space-y-2">
+            <h3 className="text-base font-medium text-[#202124]">No Matched Jobs Found</h3>
+            <p className="text-xs text-[#5f6368] max-w-sm mx-auto">
+              No job postings currently match your search criteria. Check back soon for new opportunities.
+            </p>
+          </div>
+        ) : (
+          filteredJobs.map((job: JobItem) => {
           const isApplied = appliedJobIds.includes(job.id);
 
           return (
@@ -161,7 +169,8 @@ export const JobMatchingPage: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
     </div>
   );

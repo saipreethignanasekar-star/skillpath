@@ -168,58 +168,66 @@ export const SkillGapAnalysisPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f3f4] font-normal">
-              {skills.map((skill: SkillItem) => {
-                const statusBadge =
-                  skill.status === 'Strong' ? (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#e6f4ea] text-[#137333]">
-                      Strong
-                    </span>
-                  ) : skill.status === 'Needs Practice' ? (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fef7e0] text-[#b06000]">
-                      Needs Practice
-                    </span>
-                  ) : (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fce8e6] text-[#c5221f]">
-                      Critical
-                    </span>
-                  );
-
-                return (
-                  <tr key={skill.id} className="hover:bg-[#f8f9fa] transition-colors">
-                    <td className="py-3.5 px-5 font-medium text-[#202124] flex items-center gap-2">
-                      <span>{skill.name}</span>
-                      {skill.verified && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#1e8e3e]" />
-                      )}
-                    </td>
-                    <td className="py-3.5 px-5 text-[#3c4043]">{skill.userScore}%</td>
-                    <td className="py-3.5 px-5 text-[#5f6368]">{skill.requiredScore}%</td>
-                    <td className="py-3.5 px-5">
-                      <span className={`font-medium ${skill.gap >= 0 ? 'text-[#137333]' : 'text-[#c5221f]'}`}>
-                        {skill.gap > 0 ? `+${skill.gap}%` : `${skill.gap}%`}
+              {skills.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-xs text-[#5f6368]">
+                    No skills available for comparison yet. Upload a resume or select a role to populate skill requirements.
+                  </td>
+                </tr>
+              ) : (
+                skills.map((skill: SkillItem) => {
+                  const statusBadge =
+                    skill.status === 'Strong' ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#e6f4ea] text-[#137333]">
+                        Strong
                       </span>
-                    </td>
-                    <td className="py-3.5 px-5">{statusBadge}</td>
-                    <td className="py-3.5 px-5 text-right">
-                      {skill.name === 'Docker' ? (
-                        <button
-                          onClick={() => setActiveView('challenge-detail')}
-                          className="text-xs font-medium text-[#1a73e8] hover:underline"
-                        >
-                          Start challenge →
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setActiveView('roadmap')}
-                          className="text-xs font-normal text-[#5f6368] hover:text-[#1a73e8]"
-                        >
-                          View roadmap →
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                    ) : skill.status === 'Needs Practice' ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fef7e0] text-[#b06000]">
+                        Needs Practice
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fce8e6] text-[#c5221f]">
+                        Critical
+                      </span>
+                    );
+
+                  return (
+                    <tr key={skill.id} className="hover:bg-[#f8f9fa] transition-colors">
+                      <td className="py-3.5 px-5 font-medium text-[#202124] flex items-center gap-2">
+                        <span>{skill.name}</span>
+                        {skill.verified && (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#1e8e3e]" />
+                        )}
+                      </td>
+                      <td className="py-3.5 px-5 text-[#3c4043]">{skill.userScore}%</td>
+                      <td className="py-3.5 px-5 text-[#5f6368]">{skill.requiredScore}%</td>
+                      <td className="py-3.5 px-5">
+                        <span className={`font-medium ${skill.gap >= 0 ? 'text-[#137333]' : 'text-[#c5221f]'}`}>
+                          {skill.gap > 0 ? `+${skill.gap}%` : `${skill.gap}%`}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-5">{statusBadge}</td>
+                      <td className="py-3.5 px-5 text-right">
+                        {skill.name === 'Docker' ? (
+                          <button
+                            onClick={() => setActiveView('challenge-detail')}
+                            className="text-xs font-medium text-[#1a73e8] hover:underline"
+                          >
+                            Start challenge →
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setActiveView('roadmap')}
+                            className="text-xs font-normal text-[#5f6368] hover:text-[#1a73e8]"
+                          >
+                            View roadmap →
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

@@ -66,7 +66,18 @@ export const AIMentorPage: React.FC = () => {
           </div>
         </div>
 
-        {chatMessages.map((msg: ChatMessage) => {
+        {chatMessages.length === 0 ? (
+          <div className="py-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center mx-auto">
+              <Bot className="w-6 h-6 stroke-[1.8]" />
+            </div>
+            <h3 className="text-base font-medium text-[#202124]">Welcome to your AI Career Mentor</h3>
+            <p className="text-xs text-[#5f6368] max-w-sm mx-auto">
+              Ask anything about your career path, skill gaps, or learning roadmaps to get personalized advice.
+            </p>
+          </div>
+        ) : (
+          chatMessages.map((msg: ChatMessage) => {
           const isAI = msg.sender === 'ai';
 
           return (
@@ -134,7 +145,8 @@ export const AIMentorPage: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* Suggested prompt chips - Google style rounded pills */}

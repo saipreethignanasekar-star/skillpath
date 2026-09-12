@@ -21,7 +21,7 @@ export const StudentDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-normal text-[#202124] tracking-tight">
-            Good morning, {user.name.split(' ')[0]}
+            Good morning, {user.name ? user.name.split(' ')[0] : 'User'}
           </h1>
           <p className="text-xs sm:text-sm text-[#5f6368] mt-0.5">
             Here's what you need to focus on today.
@@ -95,43 +95,55 @@ export const StudentDashboard: React.FC = () => {
           </div>
 
           <div className="space-y-3.5 flex-1 justify-center flex flex-col my-1">
-            {skills.slice(0, 6).map((skill) => {
-              const color =
-                skill.userScore >= 75
-                  ? 'bg-[#1e8e3e]'
-                  : skill.userScore >= 50
-                  ? 'bg-[#1a73e8]'
-                  : skill.userScore >= 30
-                  ? 'bg-[#e37400]'
-                  : 'bg-[#d93025]';
+            {skills.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#5f6368] space-y-2">
+                <p>No skills detected yet.</p>
+                <button
+                  onClick={() => setActiveView('resume-analysis')}
+                  className="px-4 py-1.5 bg-[#e8f0fe] text-[#1a73e8] rounded-full font-medium hover:bg-[#d2e3fc] transition-colors"
+                >
+                  Upload Resume to Extract Skills
+                </button>
+              </div>
+            ) : (
+              skills.slice(0, 6).map((skill) => {
+                const color =
+                  skill.userScore >= 75
+                    ? 'bg-[#1e8e3e]'
+                    : skill.userScore >= 50
+                    ? 'bg-[#1a73e8]'
+                    : skill.userScore >= 30
+                    ? 'bg-[#e37400]'
+                    : 'bg-[#d93025]';
 
-              return (
-                <div key={skill.id} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-[#3c4043]">{skill.name}</span>
-                      {skill.fromResume && (
-                        <span className="text-[10px] px-1.5 py-0.2 bg-[#f1f3f4] text-[#5f6368] rounded border border-[#dadce0]">
-                          Resume
-                        </span>
-                      )}
-                      {skill.fromRoadmap && (
-                        <span className="text-[10px] px-1.5 py-0.2 bg-[#e6f4ea] text-[#137333] rounded border border-[#ceead6]">
-                          Roadmap
-                        </span>
-                      )}
+                return (
+                  <div key={skill.id} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-[#3c4043]">{skill.name}</span>
+                        {skill.fromResume && (
+                          <span className="text-[10px] px-1.5 py-0.2 bg-[#f1f3f4] text-[#5f6368] rounded border border-[#dadce0]">
+                            Resume
+                          </span>
+                        )}
+                        {skill.fromRoadmap && (
+                          <span className="text-[10px] px-1.5 py-0.2 bg-[#e6f4ea] text-[#137333] rounded border border-[#ceead6]">
+                            Roadmap
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-medium text-[#202124]">{skill.userScore}%</span>
                     </div>
-                    <span className="font-medium text-[#202124]">{skill.userScore}%</span>
+                    <div className="h-1.5 w-full bg-[#e8eaed] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${color} rounded-full transition-all duration-700`}
+                        style={{ width: `${skill.userScore}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full bg-[#e8eaed] rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${color} rounded-full transition-all duration-700`}
-                      style={{ width: `${skill.userScore}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
 
           <div className="pt-3 border-t border-[#f1f3f4] flex items-center justify-between text-[11px] text-[#5f6368]">
@@ -253,17 +265,23 @@ export const StudentDashboard: React.FC = () => {
             </div>
 
             <div className="space-y-3.5">
-              {user.recentActivity.slice(0, 3).map((act) => (
-                <div key={act.id} className="flex items-start gap-3 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-[#202124]">{act.title}</div>
-                    <div className="text-[11px] text-[#5f6368]">{act.timeAgo}</div>
-                  </div>
+              {user.recentActivity.length === 0 ? (
+                <div className="py-6 text-center text-xs text-[#5f6368]">
+                  No recent activity recorded yet.
                 </div>
-              ))}
+              ) : (
+                user.recentActivity.slice(0, 3).map((act) => (
+                  <div key={act.id} className="flex items-start gap-3 text-xs">
+                    <div className="w-6 h-6 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-[#202124]">{act.title}</div>
+                      <div className="text-[11px] text-[#5f6368]">{act.timeAgo}</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

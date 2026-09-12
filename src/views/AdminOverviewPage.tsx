@@ -209,45 +209,53 @@ export const AdminOverviewPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f3f4] font-normal">
-              {cohortStudents.map((student: StudentCohortMetric) => (
-                <tr key={student.id} className="hover:bg-[#f8f9fa] transition-colors">
-                  <td className="py-3.5 px-5 flex items-center gap-3">
-                    <img
-                      src={student.avatar}
-                      alt={student.name}
-                      className="w-8 h-8 rounded-full object-cover ring-1 ring-[#dadce0]"
-                    />
-                    <div>
-                      <div className="font-medium text-[#202124]">{student.name}</div>
-                      <div className="text-[10px] text-[#5f6368]">{student.status}</div>
-                    </div>
+              {cohortStudents.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-xs text-[#5f6368]">
+                    No students currently in cohort. New student signups will appear here automatically.
                   </td>
-                  <td className="py-3.5 px-5 text-[#3c4043]">{student.targetRole}</td>
-                  <td className="py-3.5 px-5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-[#e8eaed] rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${
-                            student.readiness >= 80
-                              ? 'bg-[#1e8e3e]'
-                              : student.readiness >= 65
-                              ? 'bg-[#1a73e8]'
-                              : 'bg-[#f29900]'
-                          } rounded-full`}
-                          style={{ width: `${student.readiness}%` }}
-                        />
-                      </div>
-                      <span className="font-medium text-[#202124]">{student.readiness}%</span>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-5">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#e8f0fe] text-[#1967d2]">
-                      {student.verifiedSkillsCount} verified
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-5 text-right text-[#5f6368]">{student.lastActivity}</td>
                 </tr>
-              ))}
+              ) : (
+                cohortStudents.map((student: StudentCohortMetric) => (
+                  <tr key={student.id} className="hover:bg-[#f8f9fa] transition-colors">
+                    <td className="py-3.5 px-5 flex items-center gap-3">
+                      <img
+                        src={student.avatar}
+                        alt={student.name}
+                        className="w-8 h-8 rounded-full object-cover ring-1 ring-[#dadce0]"
+                      />
+                      <div>
+                        <div className="font-medium text-[#202124]">{student.name}</div>
+                        <div className="text-[10px] text-[#5f6368]">{student.status}</div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5 text-[#3c4043]">{student.targetRole}</td>
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-[#e8eaed] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${
+                              student.readiness >= 80
+                                ? 'bg-[#1e8e3e]'
+                                : student.readiness >= 65
+                                ? 'bg-[#1a73e8]'
+                                : 'bg-[#f29900]'
+                            } rounded-full`}
+                            style={{ width: `${student.readiness}%` }}
+                          />
+                        </div>
+                        <span className="font-medium text-[#202124]">{student.readiness}%</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5 text-[#3c4043]">
+                      {student.verifiedSkillsCount} verified
+                    </td>
+                    <td className="py-3.5 px-5 text-right text-[#5f6368]">
+                      {student.lastActivity}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
