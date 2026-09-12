@@ -213,10 +213,10 @@ export const OnboardingPage: React.FC = () => {
 
             <div className="space-y-2">
               <h2 className="text-3xl font-normal text-[#202124] tracking-tight">
-                You're ready, Rahul!
+                You're ready{user.name ? `, ${user.name.split(' ')[0]}` : ''}!
               </h2>
               <p className="text-sm text-[#5f6368]">
-                We've customized your path for <strong className="text-[#202124] font-medium">{targetRole}</strong> with an initial baseline of <strong>68%</strong>.
+                We've customized your path for <strong className="text-[#202124] font-medium">{targetRole}</strong> with an initial baseline of <strong>{user.careerReadiness}%</strong>.
               </p>
             </div>
 
@@ -227,11 +227,11 @@ export const OnboardingPage: React.FC = () => {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[#5f6368]">Initial readiness</span>
-                <span className="font-medium text-[#1a73e8]">68% (+12% this month)</span>
+                <span className="font-medium text-[#1a73e8]">{user.careerReadiness}%</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[#5f6368]">Estimated duration</span>
-                <span className="font-medium text-[#202124]">6 weeks</span>
+                <span className="font-medium text-[#202124]">{user.estimatedWeeks || 4} weeks</span>
               </div>
             </div>
           </div>

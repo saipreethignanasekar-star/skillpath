@@ -7,13 +7,12 @@ export const SignUpPage: React.FC = () => {
   const { setActiveView, signup } = useApp();
 
   const [formData, setFormData] = useState({
-    name: 'Rahul Kumar',
-    email: 'rahul.kumar@example.com',
-    password: 'password123',
-    confirmPassword: 'password123',
-    college: 'National Institute of Technology',
-    currentYear: '3rd Year',
-    targetRole: 'Cloud Engineer' as CareerRole
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    college: '',
+    currentYear: '1st Year'
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,8 +21,7 @@ export const SignUpPage: React.FC = () => {
       name: formData.name,
       email: formData.email,
       college: formData.college,
-      currentYear: formData.currentYear,
-      targetRole: formData.targetRole
+      currentYear: formData.currentYear
     });
   };
 
@@ -138,25 +136,6 @@ export const SignUpPage: React.FC = () => {
                 <option value="Graduate">Recent Graduate</option>
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#3c4043] mb-1.5">
-              Target Career Goal
-            </label>
-            <select
-              value={formData.targetRole}
-              onChange={(e) => setFormData({ ...formData, targetRole: e.target.value as CareerRole })}
-              className="w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border border-[#dadce0] focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] text-[#202124] transition-all"
-            >
-              <option value="Cloud Engineer">Cloud Engineer</option>
-              <option value="DevOps Engineer">DevOps Engineer</option>
-              <option value="Full Stack Developer">Full Stack Developer</option>
-              <option value="Data Analyst">Data Analyst</option>
-              <option value="AI/ML Engineer">AI/ML Engineer</option>
-              <option value="Cybersecurity Engineer">Cybersecurity Engineer</option>
-              <option value="Software Developer">Software Developer</option>
-            </select>
           </div>
 
           <div className="pt-3 flex items-center justify-between">

@@ -57,6 +57,262 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+export const ROLE_SKILL_TEMPLATES: Record<CareerRole, { name: string; category: SkillItem['category']; requiredScore: number }[]> = {
+  'Cloud Engineer': [
+    { name: 'Linux', category: 'Foundation', requiredScore: 75 },
+    { name: 'AWS', category: 'Cloud', requiredScore: 90 },
+    { name: 'Docker', category: 'DevOps', requiredScore: 80 },
+    { name: 'Kubernetes', category: 'DevOps', requiredScore: 80 },
+    { name: 'Git', category: 'Tooling', requiredScore: 70 },
+    { name: 'Terraform', category: 'Tooling', requiredScore: 70 },
+    { name: 'Python', category: 'Languages', requiredScore: 70 }
+  ],
+  'DevOps Engineer': [
+    { name: 'Linux', category: 'Foundation', requiredScore: 85 },
+    { name: 'Docker', category: 'DevOps', requiredScore: 90 },
+    { name: 'Kubernetes', category: 'DevOps', requiredScore: 95 },
+    { name: 'CI/CD', category: 'DevOps', requiredScore: 90 },
+    { name: 'Git', category: 'Tooling', requiredScore: 80 },
+    { name: 'Terraform', category: 'Tooling', requiredScore: 80 },
+    { name: 'Python', category: 'Languages', requiredScore: 75 }
+  ],
+  'Full Stack Developer': [
+    { name: 'JavaScript', category: 'Languages', requiredScore: 90 },
+    { name: 'React', category: 'Foundation', requiredScore: 90 },
+    { name: 'Node.js', category: 'Foundation', requiredScore: 85 },
+    { name: 'HTML/CSS', category: 'Foundation', requiredScore: 85 },
+    { name: 'Git', category: 'Tooling', requiredScore: 80 },
+    { name: 'PostgreSQL', category: 'Tooling', requiredScore: 80 },
+    { name: 'REST API', category: 'Tooling', requiredScore: 85 }
+  ],
+  'Data Analyst': [
+    { name: 'SQL', category: 'Foundation', requiredScore: 90 },
+    { name: 'Python', category: 'Languages', requiredScore: 85 },
+    { name: 'Excel', category: 'Tooling', requiredScore: 85 },
+    { name: 'Tableau', category: 'Tooling', requiredScore: 80 },
+    { name: 'Statistics', category: 'Foundation', requiredScore: 75 },
+    { name: 'Pandas', category: 'Tooling', requiredScore: 80 }
+  ],
+  'AI/ML Engineer': [
+    { name: 'Python', category: 'Languages', requiredScore: 95 },
+    { name: 'PyTorch', category: 'Tooling', requiredScore: 90 },
+    { name: 'Scikit-Learn', category: 'Tooling', requiredScore: 85 },
+    { name: 'Mathematics', category: 'Foundation', requiredScore: 85 },
+    { name: 'Machine Learning', category: 'Foundation', requiredScore: 90 },
+    { name: 'Docker', category: 'DevOps', requiredScore: 75 }
+  ],
+  'Cybersecurity Engineer': [
+    { name: 'Networking', category: 'Foundation', requiredScore: 90 },
+    { name: 'Linux', category: 'Foundation', requiredScore: 85 },
+    { name: 'Security Architecture', category: 'Foundation', requiredScore: 85 },
+    { name: 'Penetration Testing', category: 'Tooling', requiredScore: 80 },
+    { name: 'Python', category: 'Languages', requiredScore: 75 },
+    { name: 'Cryptography', category: 'Tooling', requiredScore: 75 }
+  ],
+  'Software Developer': [
+    { name: 'Data Structures', category: 'Foundation', requiredScore: 90 },
+    { name: 'Java', category: 'Languages', requiredScore: 85 },
+    { name: 'System Design', category: 'Foundation', requiredScore: 80 },
+    { name: 'Git', category: 'Tooling', requiredScore: 85 },
+    { name: 'SQL', category: 'Tooling', requiredScore: 75 },
+    { name: 'Python', category: 'Languages', requiredScore: 80 }
+  ]
+};
+
+export const ROLE_ROADMAP_TEMPLATES: Record<CareerRole, RoadmapPhase[]> = {
+  'Cloud Engineer': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Systems & Networking Foundation',
+      duration: '2 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'Linux Fundamentals & CLI', completed: false, duration: '4 days', description: 'Permissions, process control, file systems & shell scripting' },
+        { id: 'mod_2', title: 'Networking Fundamentals', completed: false, duration: '6 days', description: 'TCP/IP, OSI Model, Subnetting, DNS, HTTP/HTTPS' }
+      ]
+    },
+    {
+      id: 'ph_2',
+      number: 2,
+      title: 'Phase 2 - Cloud Services (AWS / GCP)',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_3', title: 'Compute & Storage (EC2 & S3)', completed: false, duration: '1 week', description: 'Virtual instances, security groups, blob storage & lifecycle rules' },
+        { id: 'mod_4', title: 'Identity & Security (IAM)', completed: false, duration: '1 week', description: 'Roles, policies, least-privilege security & audit logs' },
+        { id: 'mod_5', title: 'Virtual Private Cloud (VPC)', completed: false, duration: '1 week', description: 'Subnets, NAT gateways, route tables & peering' }
+      ]
+    },
+    {
+      id: 'ph_3',
+      number: 3,
+      title: 'Phase 3 - Containerization & Orchestration',
+      duration: '4 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_6', title: 'Docker Containers', completed: false, duration: '10 days', description: 'Image optimization, multi-stage builds & compose' },
+        { id: 'mod_7', title: 'Kubernetes Cluster Management', completed: false, duration: '14 days', description: 'Pods, Deployments, Services, ConfigMaps & Secrets' }
+      ]
+    },
+    {
+      id: 'ph_4',
+      number: 4,
+      title: 'Phase 4 - Infrastructure as Code & CI/CD',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_8', title: 'Terraform Provisioning', completed: false, duration: '10 days', description: 'HCL syntax, remote state, modules & providers' },
+        { id: 'mod_9', title: 'GitHub Actions & Automation', completed: false, duration: '8 days', description: 'Automated testing, building, and cloud deployments' }
+      ]
+    }
+  ],
+  'DevOps Engineer': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Linux & Automation',
+      duration: '2 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'Advanced Linux Administration', completed: false, duration: '5 days', description: 'Kernel tuning, systemd, log analysis & SSH security' },
+        { id: 'mod_2', title: 'Bash & Python Scripting', completed: false, duration: '5 days', description: 'Automating administrative tasks & API scripts' }
+      ]
+    },
+    {
+      id: 'ph_2',
+      number: 2,
+      title: 'Phase 2 - CI/CD Pipelines & Containerization',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_3', title: 'Docker & Microservices', completed: false, duration: '1 week', description: 'Container security, multi-stage builds & compose' },
+        { id: 'mod_4', title: 'CI/CD Automation', completed: false, duration: '2 weeks', description: 'GitHub Actions, Jenkins pipelines, release strategies' }
+      ]
+    },
+    {
+      id: 'ph_3',
+      number: 3,
+      title: 'Phase 3 - Kubernetes & Infrastructure as Code',
+      duration: '4 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_5', title: 'Kubernetes Operations', completed: false, duration: '2 weeks', description: 'Ingress controllers, Helm charts & RBAC' },
+        { id: 'mod_6', title: 'Terraform & Ansible', completed: false, duration: '2 weeks', description: 'Declarative infrastructure and configuration management' }
+      ]
+    }
+  ],
+  'Full Stack Developer': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Web Core & Modern JavaScript',
+      duration: '2 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'HTML5, CSS3 & Responsive Design', completed: false, duration: '4 days', description: 'Flexbox, Grid, Tailwind CSS & accessibility' },
+        { id: 'mod_2', title: 'Modern JavaScript & ES6+', completed: false, duration: '6 days', description: 'Async/Await, ES Modules, Promises & DOM manipulation' }
+      ]
+    },
+    {
+      id: 'ph_2',
+      number: 2,
+      title: 'Phase 2 - Frontend Engineering (React)',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_3', title: 'React Hooks & Component State', completed: false, duration: '10 days', description: 'State management, custom hooks, component lifecycle' },
+        { id: 'mod_4', title: 'TypeScript & Component Styling', completed: false, duration: '8 days', description: 'Type safety, props interfaces & state typing' }
+      ]
+    },
+    {
+      id: 'ph_3',
+      number: 3,
+      title: 'Phase 3 - Backend APIs & Databases',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_5', title: 'Node.js & Express REST APIs', completed: false, duration: '10 days', description: 'Routing, middleware, JWT auth & error handling' },
+        { id: 'mod_6', title: 'PostgreSQL & SQL ORMs', completed: false, duration: '8 days', description: 'Schema design, joins, migrations & index optimization' }
+      ]
+    }
+  ],
+  'Data Analyst': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Data Processing with SQL & Excel',
+      duration: '2 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'Advanced SQL Queries', completed: false, duration: '1 week', description: 'Joins, aggregations, window functions & subqueries' },
+        { id: 'mod_2', title: 'Excel & Data Analysis', completed: false, duration: '1 week', description: 'Pivot tables, VLOOKUP, INDEX-MATCH & formulas' }
+      ]
+    },
+    {
+      id: 'ph_2',
+      number: 2,
+      title: 'Phase 2 - Python Data Analysis (Pandas)',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_3', title: 'Pandas & NumPy Data Cleaning', completed: false, duration: '10 days', description: 'Handling missing values, reshaping & merging datasets' },
+        { id: 'mod_4', title: 'Exploratory Data Analysis (EDA)', completed: false, duration: '8 days', description: 'Statistical summaries, distributions & outlier detection' }
+      ]
+    }
+  ],
+  'AI/ML Engineer': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Math & Python Foundations',
+      duration: '2 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'Linear Algebra & Calculus for ML', completed: false, duration: '1 week', description: 'Vectors, matrices, gradients & optimization' },
+        { id: 'mod_2', title: 'NumPy & Scientific Python', completed: false, duration: '1 week', description: 'Efficient array operations & data structures' }
+      ]
+    },
+    {
+      id: 'ph_2',
+      number: 2,
+      title: 'Phase 2 - Machine Learning Models',
+      duration: '3 weeks',
+      status: 'upcoming',
+      modules: [
+        { id: 'mod_3', title: 'Supervised Learning (Scikit-Learn)', completed: false, duration: '10 days', description: 'Regression, Decision Trees, Random Forests & Evaluation' },
+        { id: 'mod_4', title: 'Unsupervised Learning & Clustering', completed: false, duration: '8 days', description: 'K-Means, PCA, Dimensionality Reduction' }
+      ]
+    }
+  ],
+  'Cybersecurity Engineer': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Network Security Foundations',
+      duration: '2 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'Network Protocols & Analysis', completed: false, duration: '1 week', description: 'Wireshark, TCP/IP, OSI Layers, Port Scanning' },
+        { id: 'mod_2', title: 'Linux Hardening & Firewall', completed: false, duration: '1 week', description: 'IPTables, UFW, SSH Hardening & Permission Control' }
+      ]
+    }
+  ],
+  'Software Developer': [
+    {
+      id: 'ph_1',
+      number: 1,
+      title: 'Phase 1 - Data Structures & Algorithms',
+      duration: '3 weeks',
+      status: 'in_progress',
+      modules: [
+        { id: 'mod_1', title: 'Arrays, Strings & Linked Lists', completed: false, duration: '1 week', description: 'Memory layout, traversal, time complexity' },
+        { id: 'mod_2', title: 'Trees, Graphs & Dynamic Programming', completed: false, duration: '2 weeks', description: 'BFS/DFS, recursion, memoization' }
+      ]
+    }
+  ]
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
@@ -84,40 +340,107 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Switch role and dynamically update required skills and gaps
-  const setTargetRole = (role: CareerRole) => {
-    setTargetRoleState(role);
+  // Helper to sync skills, roadmap & readiness score based on target role & detected skills
+  const syncUserTargetRoleAndSkills = (role: CareerRole, detectedSkills: string[]) => {
+    const templates = ROLE_SKILL_TEMPLATES[role] || ROLE_SKILL_TEMPLATES['Cloud Engineer'];
+    const lowerDetected = new Set(detectedSkills.map(d => d.toLowerCase()));
+
+    let totalUserScore = 0;
+    let totalReqScore = 0;
+
+    const newSkills: SkillItem[] = templates.map((t, idx) => {
+      const isDetected = lowerDetected.has(t.name.toLowerCase());
+      const userScore = isDetected ? Math.min(85, t.requiredScore + 5) : 0;
+      const gap = userScore - t.requiredScore;
+      const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
+
+      totalUserScore += Math.min(userScore, t.requiredScore);
+      totalReqScore += t.requiredScore;
+
+      return {
+        id: `sk_${idx}_${t.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+        name: t.name,
+        category: t.category,
+        userScore,
+        requiredScore: t.requiredScore,
+        gap,
+        status,
+        verified: isDetected,
+        fromResume: isDetected,
+        fromRoadmap: false
+      };
+    });
+
+    // Include custom skills detected in resume
+    detectedSkills.forEach((detName) => {
+      const exists = newSkills.some(s => s.name.toLowerCase() === detName.toLowerCase());
+      if (!exists) {
+        newSkills.push({
+          id: `sk_custom_${detName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          name: detName,
+          category: 'Languages',
+          userScore: 75,
+          requiredScore: 70,
+          gap: 5,
+          status: 'Strong',
+          verified: true,
+          fromResume: true,
+          fromRoadmap: false
+        });
+        totalUserScore += 70;
+        totalReqScore += 70;
+      }
+    });
+
+    const newReadiness = totalReqScore > 0 ? Math.round((totalUserScore / totalReqScore) * 100) : 0;
+    const newRoadmap = ROLE_ROADMAP_TEMPLATES[role] || ROLE_ROADMAP_TEMPLATES['Cloud Engineer'];
+
+    setSkills(newSkills);
+    setRoadmapPhases(newRoadmap);
+
     setUser(prev => ({
       ...prev,
       targetRole: role,
-      careerReadiness: role === 'Cloud Engineer' ? 68 : role === 'DevOps Engineer' ? 72 : 60
+      careerReadiness: newReadiness,
+      estimatedWeeks: Math.max(2, Math.ceil((100 - newReadiness) / 10)),
+      verifiedSkills: Array.from(new Set([...prev.verifiedSkills, ...detectedSkills]))
     }));
 
-    // Adjust skill requirement profiles
-    setSkills(prev =>
-      prev.map(skill => {
-        let req = skill.requiredScore;
-        if (role === 'Cloud Engineer') {
-          if (skill.name === 'AWS') req = 90;
-          if (skill.name === 'Kubernetes') req = 80;
-          if (skill.name === 'Docker') req = 80;
-          if (skill.name === 'Linux') req = 75;
-          if (skill.name === 'Terraform') req = 70;
-        } else if (role === 'DevOps Engineer') {
-          if (skill.name === 'Kubernetes') req = 95;
-          if (skill.name === 'Docker') req = 90;
-          if (skill.name === 'Linux') req = 85;
-          if (skill.name === 'AWS') req = 75;
-        } else if (role === 'Full Stack Developer') {
-          if (skill.name === 'Python') req = 85;
-          if (skill.name === 'Git') req = 85;
-          if (skill.name === 'Docker') req = 60;
-        }
-        const gap = skill.userScore - req;
-        const status = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-        return { ...skill, requiredScore: req, gap, status };
-      })
-    );
+    // Update job matches
+    setJobs([
+      {
+        id: `job_1_${Date.now()}`,
+        title: `${role} Intern`,
+        company: 'CloudScale Technologies',
+        location: 'Bengaluru, India',
+        isRemote: false,
+        experience: '0-1 years',
+        matchScore: newReadiness > 0 ? Math.min(95, newReadiness + 15) : 60,
+        skills: detectedSkills.slice(0, 3),
+        missingSkills: newSkills.filter(s => s.status === 'Critical').slice(0, 2).map(s => s.name),
+        salary: '₹6,00,000 - ₹9,00,000 / yr',
+        postedAgo: '2 days ago'
+      },
+      {
+        id: `job_2_${Date.now()}`,
+        title: `Junior ${role}`,
+        company: 'Nexus Innovations',
+        location: 'Remote',
+        isRemote: true,
+        experience: 'Fresher / Intern',
+        matchScore: newReadiness > 0 ? Math.min(90, newReadiness + 10) : 55,
+        skills: detectedSkills.slice(0, 2),
+        missingSkills: newSkills.filter(s => s.status !== 'Strong').slice(0, 2).map(s => s.name),
+        salary: '₹5,50,000 - ₹8,00,000 / yr',
+        postedAgo: 'Yesterday'
+      }
+    ]);
+  };
+
+  // Switch role and dynamically update required skills and gaps
+  const setTargetRole = (role: CareerRole) => {
+    setTargetRoleState(role);
+    syncUserTargetRoleAndSkills(role, user.detectedSkills);
   };
 
   const login = (email: string) => {
@@ -128,11 +451,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const signup = (userData: Partial<UserProfile>) => {
     setIsLoggedIn(true);
+    const chosenRole = userData.targetRole || targetRole;
     setUser(prev => ({
       ...prev,
-      ...userData,
-      careerReadiness: 45
+      ...userData
     }));
+
+    if (userData.targetRole) {
+      setTargetRoleState(userData.targetRole);
+    }
+    syncUserTargetRoleAndSkills(chosenRole, user.detectedSkills);
     setActiveView('onboarding');
   };
 
@@ -145,19 +473,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAnalyzingResume(true);
     setResumeScanStep(1); // Reading resume
 
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 600));
     setResumeScanStep(2); // Identifying skills
 
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 600));
     setResumeScanStep(3); // Finding projects
 
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 600));
     setResumeScanStep(4); // Mapping career requirements
 
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 600));
     setIsAnalyzingResume(false);
 
-    const newSkills = ['Python', 'JavaScript', 'React', 'Node.js', 'MongoDB', 'Git', 'Docker', 'AWS', 'Linux', 'Express'];
+    const newSkills = ['Python', 'JavaScript', 'React', 'Node.js', 'Docker', 'AWS', 'Linux', 'Git'];
+    
     setUser(prev => ({
       ...prev,
       resumeUploaded: true,
@@ -169,26 +498,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]
     }));
 
-    // Update skills based on uploaded resume
-    setSkills(prev =>
-      prev.map(s => {
-        const isMatched = newSkills.some(d => d.toLowerCase() === s.name.toLowerCase());
-        if (isMatched) {
-          const boostedScore = Math.max(s.userScore, 75);
-          const gap = boostedScore - s.requiredScore;
-          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-          return {
-            ...s,
-            userScore: boostedScore,
-            fromResume: true,
-            gap,
-            status
-          };
-        }
-        return s;
-      })
-    );
-
+    syncUserTargetRoleAndSkills(targetRole, newSkills);
     triggerConfetti();
   };
 
@@ -264,49 +574,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]
     }));
 
-    // Dynamically update skills tracker based on uploaded resume skills
-    setSkills(prev => {
-      const updated = prev.map(s => {
-        const isMatched = finalDetected.some(d => d.toLowerCase() === s.name.toLowerCase());
-        if (isMatched) {
-          const newScore = Math.max(s.userScore, 75);
-          const gap = newScore - s.requiredScore;
-          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-          return {
-            ...s,
-            userScore: newScore,
-            fromResume: true,
-            gap,
-            status
-          };
-        }
-        return s;
-      });
-
-      // Also add newly detected skills if not already tracked
-      const existingNames = new Set(updated.map(s => s.name.toLowerCase()));
-      const extraSkills: SkillItem[] = [];
-
-      finalDetected.forEach(skillName => {
-        if (!existingNames.has(skillName.toLowerCase())) {
-          extraSkills.push({
-            id: `sk_custom_${skillName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-            name: skillName,
-            category: 'Languages',
-            userScore: 75,
-            requiredScore: 70,
-            gap: 5,
-            status: 'Strong',
-            verified: false,
-            fromResume: true,
-            fromRoadmap: false
-          });
-        }
-      });
-
-      return [...updated, ...extraSkills];
-    });
-
+    syncUserTargetRoleAndSkills(targetRole, finalDetected);
     triggerConfetti();
   };
 
