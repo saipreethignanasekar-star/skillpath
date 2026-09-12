@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Compass, ArrowRight, Sparkles, UserCheck, ShieldCheck } from 'lucide-react';
+import { Compass, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { setActiveView, login } = useApp();
-  const [email, setEmail] = useState('rahul.kumar@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,45 +88,6 @@ export const LoginPage: React.FC = () => {
             </button>
           </div>
         </form>
-
-        {/* Demo Login Options */}
-        <div className="mt-6 p-4 rounded-xl bg-[#f8f9fa] border border-[#e8eaed]">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1a73e8] uppercase tracking-wider mb-2.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Quick Demo Login</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                login('rahul.kumar@example.com');
-                setActiveView('dashboard');
-              }}
-              className="px-3 py-2 bg-white hover:bg-[#e8f0fe] hover:border-[#1a73e8] border border-[#dadce0] text-[#202124] rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all text-left group"
-            >
-              <UserCheck className="w-4 h-4 text-[#1a73e8] shrink-0" />
-              <div>
-                <div className="font-semibold group-hover:text-[#1a73e8]">Student Demo</div>
-                <div className="text-[10px] text-[#5f6368]">Rahul Kumar</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                login('admin.mentor@skillx.ai');
-                setActiveView('admin-overview');
-              }}
-              className="px-3 py-2 bg-white hover:bg-[#e8f0fe] hover:border-[#1a73e8] border border-[#dadce0] text-[#202124] rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all text-left group"
-            >
-              <ShieldCheck className="w-4 h-4 text-[#129eaf] shrink-0" />
-              <div>
-                <div className="font-semibold group-hover:text-[#1a73e8]">Admin / Mentor</div>
-                <div className="text-[10px] text-[#5f6368]">Cohort Analytics</div>
-              </div>
-            </button>
-          </div>
-        </div>
 
         <div className="relative my-6 text-center">
           <div className="absolute inset-0 flex items-center">
