@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   UploadCloud,
@@ -7,13 +7,15 @@ import {
   Loader2,
   ArrowRight,
   RefreshCw,
-  Plus
+  Plus,
+  AlertCircle
 } from 'lucide-react';
 
 export const ResumeAnalysisPage: React.FC = () => {
   const {
     user,
     uploadResumeSimulated,
+    uploadResumeFile,
     isAnalyzingResume,
     resumeScanStep,
     setActiveView
@@ -21,10 +23,61 @@ export const ResumeAnalysisPage: React.FC = () => {
 
   const [selectedPreset, setSelectedPreset] = useState<string>('Rahul_Kumar_Resume_2026.pdf');
   const [customSkillInput, setCustomSkillInput] = useState<string>('');
+  const [dragOver, setDragOver] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSimulatedUpload = (name: string) => {
     setSelectedPreset(name);
+    setUploadError(null);
     uploadResumeSimulated(name);
+  };
+
+  const processFile = (file: File) => {
+    setUploadError(null);
+    const validExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+    const hasValidExt = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+    if (!hasValidExt) {
+      setUploadError('Please upload a PDF, DOC, DOCX, or TXT file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size exceeds the 5MB limit.');
+      return;
+    }
+
+    setSelectedPreset(file.name);
+    uploadResumeFile(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+    // reset value so re-selecting same file triggers change
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
   };
 
   return (
@@ -41,35 +94,68 @@ export const ResumeAnalysisPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Upload Box */}
         <div className="lg:col-span-6 bg-white p-6 sm:p-8 rounded-xl border border-[#dadce0] shadow-xs flex flex-col items-center text-center">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".pdf,.doc,.docx,.txt"
+            className="hidden"
+          />
+
           <div
-            onClick={() => handleSimulatedUpload('Rahul_Kumar_CloudResume.pdf')}
-            className="w-full p-8 rounded-xl border-2 border-dashed border-[#dadce0] hover:border-[#1a73e8] bg-white hover:bg-[#f8f9fa] transition-all cursor-pointer flex flex-col items-center justify-center group"
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`w-full p-8 rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center group ${
+              dragOver
+                ? 'border-[#1a73e8] bg-[#e8f0fe]/60'
+                : 'border-[#dadce0] hover:border-[#1a73e8] bg-white hover:bg-[#f8f9fa]'
+            }`}
           >
             <div className="w-14 h-14 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
               <UploadCloud className="w-7 h-7 stroke-[1.8]" />
             </div>
 
             <h3 className="text-base font-medium text-[#202124] mb-1">
-              Drag and drop your resume here
+              {dragOver ? 'Drop your resume file here' : 'Drag and drop your resume here'}
             </h3>
             <p className="text-xs text-[#5f6368] mb-4">or</p>
 
             <button
               type="button"
-              className="px-5 py-2 bg-[#1a73e8] hover:bg-[#1557d0] text-white text-xs font-medium rounded-full transition-all shadow-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              className="px-5 py-2 bg-[#1a73e8] hover:bg-[#1557d0] text-white text-xs font-medium rounded-full transition-all shadow-xs cursor-pointer"
             >
               Browse files
             </button>
 
             <div className="text-[11px] text-[#5f6368] mt-4">
-              Supported formats: PDF, DOC, DOCX (Max 5MB)
+              Supported formats: PDF, DOC, DOCX, TXT (Max 5MB)
             </div>
+
+            {user.resumeUploaded && user.resumeFileName && (
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-[#e6f4ea] text-[#137333] text-xs font-medium rounded-full border border-[#ceead6]">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Uploaded: {user.resumeFileName}</span>
+              </div>
+            )}
           </div>
+
+          {uploadError && (
+            <div className="w-full mt-3 p-3 rounded-lg bg-[#fce8e6] border border-[#fad2cf] text-[#d93025] text-xs flex items-center gap-2 text-left">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{uploadError}</span>
+            </div>
+          )}
 
           {/* Quick preset resume buttons */}
           <div className="w-full mt-6 pt-6 border-t border-[#f1f3f4] text-left">
             <span className="text-xs font-medium text-[#5f6368] uppercase tracking-wider block mb-2">
-              Sample resumes:
+              Or test with sample resumes:
             </span>
             <div className="flex flex-wrap gap-2">
               {[
@@ -80,7 +166,7 @@ export const ResumeAnalysisPage: React.FC = () => {
                 <button
                   key={file}
                   onClick={() => handleSimulatedUpload(file)}
-                  className="px-3 py-1.5 rounded-full border border-[#dadce0] hover:border-[#bdc1c6] hover:bg-[#f8f9fa] text-xs font-normal text-[#3c4043] flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-full border border-[#dadce0] hover:border-[#bdc1c6] hover:bg-[#f8f9fa] text-xs font-normal text-[#3c4043] flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5 text-[#1a73e8]" />
                   <span>{file}</span>

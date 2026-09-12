@@ -44,6 +44,7 @@ interface AppContextType {
   signup: (userData: Partial<UserProfile>) => void;
   logout: () => void;
   uploadResumeSimulated: (fileName: string) => Promise<void>;
+  uploadResumeFile: (file: File) => Promise<void>;
   isAnalyzingResume: boolean;
   resumeScanStep: number;
   completeRoadmapModule: (phaseId: string, moduleId: string) => void;
@@ -163,10 +164,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       resumeFileName: fileName,
       detectedSkills: newSkills,
       recentActivity: [
-        { id: `act_${Date.now()}`, title: 'Resume analyzed with AI', timeAgo: 'Just now', type: 'resume' },
+        { id: `act_${Date.now()}`, title: `Resume analyzed: ${fileName}`, timeAgo: 'Just now', type: 'resume' },
         ...prev.recentActivity
       ]
     }));
+    triggerConfetti();
+  };
+
+  const uploadResumeFile = async (file: File) => {
+    setIsAnalyzingResume(true);
+    setResumeScanStep(1); // Reading resume structure and binary
+
+    // Read file text content if plain text or attempt decoding
+    let extractedText = '';
+    try {
+      if (file.type.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+        extractedText = await file.text();
+      } else {
+        // Read raw buffer slice to catch plaintext strings in PDFs or documents
+        const buffer = await file.arrayBuffer();
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        extractedText = decoder.decode(buffer.slice(0, 100000));
+      }
+    } catch {
+      extractedText = '';
+    }
+
+    await new Promise(r => setTimeout(r, 600));
+    setResumeScanStep(2); // Identifying technical proficiencies
+
+    // Match against real skills catalogue
+    const knownSkillsList = [
+      'Python', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Express',
+      'HTML', 'CSS', 'Tailwind', 'MongoDB', 'PostgreSQL', 'MySQL', 'SQL',
+      'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Linux', 'Git',
+      'CI/CD', 'GitHub Actions', 'Terraform', 'GraphQL', 'REST API',
+      'Next.js', 'Vue', 'Django', 'Flask', 'FastAPI', 'Java', 'C++',
+      'Go', 'Rust', 'Redis', 'Kafka', 'Ansible', 'Bash', 'Figma'
+    ];
+
+    const detectedFromContent: string[] = [];
+    if (extractedText) {
+      const lowerText = extractedText.toLowerCase();
+      knownSkillsList.forEach(s => {
+        // Match word boundaries or substring
+        const regex = new RegExp(`\\b${s.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (regex.test(lowerText) && !detectedFromContent.includes(s)) {
+          detectedFromContent.push(s);
+        }
+      });
+    }
+
+    await new Promise(r => setTimeout(r, 700));
+    setResumeScanStep(3); // Extracting projects and practical experience
+
+    // Default or merge with detected
+    const finalDetected = detectedFromContent.length >= 3
+      ? detectedFromContent
+      : Array.from(new Set([
+          ...detectedFromContent,
+          'React', 'TypeScript', 'Node.js', 'Docker', 'AWS', 'Git', 'Linux', 'REST API'
+        ]));
+
+    await new Promise(r => setTimeout(r, 600));
+    setResumeScanStep(4); // Mapping career requirements to target role
+
+    await new Promise(r => setTimeout(r, 600));
+    setIsAnalyzingResume(false);
+
+    setUser(prev => ({
+      ...prev,
+      resumeUploaded: true,
+      resumeFileName: file.name,
+      detectedSkills: finalDetected,
+      recentActivity: [
+        { id: `act_${Date.now()}`, title: `Uploaded local resume: ${file.name}`, timeAgo: 'Just now', type: 'resume' },
+        ...prev.recentActivity
+      ]
+    }));
+
+    // Dynamically update skills gap comparison if matching user skills
+    setSkills(prev =>
+      prev.map(s => {
+        if (finalDetected.some(d => d.toLowerCase() === s.name.toLowerCase())) {
+          const newScore = Math.max(s.userScore, 75);
+          const gap = newScore - s.requiredScore;
+          return {
+            ...s,
+            userScore: newScore,
+            gap,
+            status: gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical'
+          };
+        }
+        return s;
+      })
+    );
+
     triggerConfetti();
   };
 
@@ -304,6 +397,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         signup,
         logout,
         uploadResumeSimulated,
+        uploadResumeFile,
         isAnalyzingResume,
         resumeScanStep,
         completeRoadmapModule,

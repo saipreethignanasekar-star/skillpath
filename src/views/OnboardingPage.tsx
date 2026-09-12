@@ -17,7 +17,7 @@ import {
 import type { CareerRole } from '../types';
 
 export const OnboardingPage: React.FC = () => {
-  const { targetRole, setTargetRole, setActiveView, uploadResumeSimulated } = useApp();
+  const { user, targetRole, setTargetRole, setActiveView, uploadResumeSimulated, uploadResumeFile } = useApp();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [experienceLevel, setExperienceLevel] = useState<string>('Student / Fresher');
 
@@ -173,17 +173,45 @@ export const OnboardingPage: React.FC = () => {
               </p>
             </div>
 
-            <div
-              onClick={() => uploadResumeSimulated('Rahul_Kumar_Resume.pdf')}
-              className="p-8 border-2 border-dashed border-[#dadce0] hover:border-[#1a73e8] bg-white hover:bg-[#f8f9fa] rounded-2xl cursor-pointer transition-all flex flex-col items-center justify-center"
-            >
-              <div className="w-12 h-12 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center mb-3">
-                <Upload className="w-6 h-6 stroke-[1.8]" />
+            <div>
+              <input
+                type="file"
+                id="onboarding-resume-upload"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    uploadResumeFile(file);
+                  }
+                }}
+                accept=".pdf,.doc,.docx,.txt"
+                className="hidden"
+              />
+
+              <label
+                htmlFor="onboarding-resume-upload"
+                className="p-8 border-2 border-dashed border-[#dadce0] hover:border-[#1a73e8] bg-white hover:bg-[#f8f9fa] rounded-2xl cursor-pointer transition-all flex flex-col items-center justify-center group block"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform mx-auto">
+                  <Upload className="w-6 h-6 stroke-[1.8]" />
+                </div>
+                <span className="text-sm font-medium text-[#202124] block">
+                  {user.resumeUploaded && user.resumeFileName
+                    ? `Uploaded: ${user.resumeFileName}`
+                    : 'Click to browse and upload resume from device'}
+                </span>
+                <span className="text-xs text-[#5f6368] mt-1 block">Supports PDF, DOC, DOCX, TXT up to 5MB</span>
+              </label>
+
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <span className="text-xs text-[#5f6368]">Or try sample:</span>
+                <button
+                  type="button"
+                  onClick={() => uploadResumeSimulated('Rahul_Kumar_Resume.pdf')}
+                  className="text-xs text-[#1a73e8] hover:underline font-medium cursor-pointer"
+                >
+                  Load sample resume (Rahul_Kumar.pdf)
+                </button>
               </div>
-              <span className="text-sm font-medium text-[#202124]">
-                Click to load sample resume (Rahul_Kumar.pdf)
-              </span>
-              <span className="text-xs text-[#5f6368] mt-1">Supports PDF, DOC, DOCX up to 5MB</span>
             </div>
           </div>
         )}
