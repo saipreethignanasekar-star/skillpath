@@ -31,6 +31,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  role?: 'student' | 'admin';
   avatar: string;
   college: string;
   currentYear: string;

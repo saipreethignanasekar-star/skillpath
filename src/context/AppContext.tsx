@@ -24,6 +24,16 @@ import {
   defaultCohortStudents
 } from '../data/mockData';
 
+import { authService } from '../services/authService';
+import { userService } from '../services/userService';
+import { skillService } from '../services/skillService';
+import { roadmapService } from '../services/roadmapService';
+import { resumeService } from '../services/resumeService';
+import { challengeService } from '../services/challengeService';
+import { jobService } from '../services/jobService';
+import { aiService } from '../services/aiService';
+import { initSocket, disconnectSocket } from '../services/socketService';
+
 interface AppContextType {
   user: UserProfile;
   activeView: ActiveView;
@@ -40,8 +50,8 @@ interface AppContextType {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
   isLoggedIn: boolean;
-  login: (email: string) => void;
-  signup: (userData: Partial<UserProfile>) => void;
+  login: (email: string, password?: string) => Promise<void>;
+  signup: (userData: Partial<UserProfile>) => Promise<void>;
   logout: () => void;
   uploadResumeSimulated: (fileName: string) => Promise<void>;
   uploadResumeFile: (file: File) => Promise<void>;
@@ -68,7 +78,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [evaluation, setEvaluation] = useState<ChallengeEvaluation>(defaultEvaluation);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [jobs, setJobs] = useState<JobItem[]>(defaultJobs);
-  const [cohortStudents] = useState<StudentCohortMetric[]>(defaultCohortStudents);
+  const [cohortStudents, setCohortStudents] = useState<StudentCohortMetric[]>(defaultCohortStudents);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
 
@@ -84,8 +94,113 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Switch role and dynamically update required skills and gaps
-  const setTargetRole = (role: CareerRole) => {
+  // Check authentication & load initial data on mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const authData = await authService.me();
+        if (authData.success && authData.user) {
+          setUser(authData.user);
+          setIsLoggedIn(true);
+          setTargetRoleState(authData.user.targetRole || 'Cloud Engineer');
+
+          // Initialize Socket.IO connection
+          const socket = initSocket(authData.user.id);
+          socket.on('student.skill.updated', () => {
+            fetchUserSkills();
+          });
+          socket.on('student.readiness.updated', (data: any) => {
+            setUser(prev => ({ ...prev, careerReadiness: data.careerReadiness }));
+          });
+
+          // Load user skills, roadmap, jobs, cohort
+          await Promise.all([
+            fetchUserSkills(),
+            fetchUserRoadmap(),
+            fetchJobs(),
+            fetchCohortStudents(),
+            fetchChatMessages()
+          ]);
+        }
+      } catch (err) {
+        console.warn('[AppContext] Connecting with local state mode:', err);
+      }
+    };
+
+    loadUserData();
+
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
+  const fetchUserSkills = async () => {
+    try {
+      const res = await skillService.getSkills();
+      if (res.success && res.skills.length > 0) {
+        setSkills(res.skills);
+      }
+    } catch (e) {
+      console.warn('Skills fetch fallback to local defaults');
+    }
+  };
+
+  const fetchUserRoadmap = async () => {
+    try {
+      const res = await roadmapService.getRoadmap();
+      if (res.success && res.roadmap && res.roadmap.phases) {
+        setRoadmapPhases(res.roadmap.phases);
+      }
+    } catch (e) {
+      console.warn('Roadmap fetch fallback to local defaults');
+    }
+  };
+
+  const fetchJobs = async () => {
+    try {
+      const res = await jobService.getJobs();
+      if (res.success && res.jobs.length > 0) {
+        setJobs(res.jobs);
+      }
+    } catch (e) {
+      console.warn('Jobs fetch fallback to local defaults');
+    }
+  };
+
+  const fetchCohortStudents = async () => {
+    try {
+      const res = await userService.getCohortStudents();
+      if (res.success && res.students && res.students.length > 0) {
+        const cohortData: StudentCohortMetric[] = res.students.map((s: any) => ({
+          id: s._id || s.id,
+          name: s.name,
+          avatar: s.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80',
+          targetRole: s.targetRole || 'Cloud Engineer',
+          readiness: s.careerReadiness || 68,
+          verifiedSkillsCount: (s.verifiedSkills || []).length,
+          lastActivity: 'Just now',
+          status: s.status || 'On Track'
+        }));
+        setCohortStudents(cohortData);
+      }
+    } catch (e) {
+      console.warn('Cohort fetch fallback to local defaults');
+    }
+  };
+
+  const fetchChatMessages = async () => {
+    try {
+      const res = await aiService.getMessages();
+      if (res.success && res.messages.length > 0) {
+        setChatMessages(res.messages);
+      }
+    } catch (e) {
+      console.warn('Chat fetch fallback to local defaults');
+    }
+  };
+
+  // Switch target career role
+  const setTargetRole = async (role: CareerRole) => {
     setTargetRoleState(role);
     setUser(prev => ({
       ...prev,
@@ -93,40 +208,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       careerReadiness: role === 'Cloud Engineer' ? 68 : role === 'DevOps Engineer' ? 72 : 60
     }));
 
-    // Adjust skill requirement profiles
-    setSkills(prev =>
-      prev.map(skill => {
-        let req = skill.requiredScore;
-        if (role === 'Cloud Engineer') {
-          if (skill.name === 'AWS') req = 90;
-          if (skill.name === 'Kubernetes') req = 80;
-          if (skill.name === 'Docker') req = 80;
-          if (skill.name === 'Linux') req = 75;
-          if (skill.name === 'Terraform') req = 70;
-        } else if (role === 'DevOps Engineer') {
-          if (skill.name === 'Kubernetes') req = 95;
-          if (skill.name === 'Docker') req = 90;
-          if (skill.name === 'Linux') req = 85;
-          if (skill.name === 'AWS') req = 75;
-        } else if (role === 'Full Stack Developer') {
-          if (skill.name === 'Python') req = 85;
-          if (skill.name === 'Git') req = 85;
-          if (skill.name === 'Docker') req = 60;
-        }
-        const gap = skill.userScore - req;
-        const status = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-        return { ...skill, requiredScore: req, gap, status };
-      })
-    );
+    try {
+      const res = await userService.setTargetRole(role);
+      if (res.success && res.skills) {
+        setSkills(res.skills);
+      }
+    } catch (e) {
+      // Local adjustment fallback
+      setSkills(prev =>
+        prev.map(skill => {
+          let req = skill.requiredScore;
+          if (role === 'Cloud Engineer') {
+            if (skill.name === 'AWS') req = 90;
+            if (skill.name === 'Kubernetes') req = 80;
+            if (skill.name === 'Docker') req = 80;
+            if (skill.name === 'Linux') req = 75;
+            if (skill.name === 'Terraform') req = 70;
+          } else if (role === 'DevOps Engineer') {
+            if (skill.name === 'Kubernetes') req = 95;
+            if (skill.name === 'Docker') req = 90;
+            if (skill.name === 'Linux') req = 85;
+            if (skill.name === 'AWS') req = 75;
+          } else if (role === 'Full Stack Developer') {
+            if (skill.name === 'Python') req = 85;
+            if (skill.name === 'Git') req = 85;
+            if (skill.name === 'Docker') req = 60;
+          }
+          const gap = skill.userScore - req;
+          const status = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
+          return { ...skill, requiredScore: req, gap, status };
+        })
+      );
+    }
   };
 
-  const login = (email: string) => {
+  const login = async (email: string, password?: string) => {
+    try {
+      const res = await authService.login(email, password);
+      if (res.success && res.user) {
+        setIsLoggedIn(true);
+        setUser(res.user);
+        initSocket(res.user.id);
+        setActiveView(res.user.role === 'admin' ? 'admin-overview' : 'dashboard');
+        await Promise.all([fetchUserSkills(), fetchUserRoadmap(), fetchJobs()]);
+        return;
+      }
+    } catch (e) {
+      console.warn('Backend login fallback to local state:', e);
+    }
+
     setIsLoggedIn(true);
     setUser(prev => ({ ...prev, email: email || prev.email }));
     setActiveView('dashboard');
   };
 
-  const signup = (userData: Partial<UserProfile>) => {
+  const signup = async (userData: Partial<UserProfile>) => {
+    try {
+      const res = await authService.signup(userData);
+      if (res.success && res.user) {
+        setIsLoggedIn(true);
+        setUser(res.user);
+        initSocket(res.user.id);
+        setActiveView('onboarding');
+        return;
+      }
+    } catch (e) {
+      console.warn('Backend signup fallback to local state:', e);
+    }
+
     setIsLoggedIn(true);
     setUser(prev => ({
       ...prev,
@@ -137,22 +286,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    authService.logout();
+    disconnectSocket();
     setIsLoggedIn(false);
     setActiveView('login');
   };
 
+  const uploadResumeFile = async (file: File) => {
+    setIsAnalyzingResume(true);
+    setResumeScanStep(1);
+
+    await new Promise(r => setTimeout(r, 600));
+    setResumeScanStep(2);
+
+    await new Promise(r => setTimeout(r, 600));
+    setResumeScanStep(3);
+
+    try {
+      const res = await resumeService.uploadResumeFile(file);
+      setResumeScanStep(4);
+      await new Promise(r => setTimeout(r, 600));
+
+      if (res.success && res.user) {
+        setUser(res.user);
+      }
+    } catch (e) {
+      console.warn('Resume API fallback:', e);
+      await uploadResumeSimulated(file.name);
+    } finally {
+      setIsAnalyzingResume(false);
+      triggerConfetti();
+    }
+  };
+
   const uploadResumeSimulated = async (fileName: string) => {
     setIsAnalyzingResume(true);
-    setResumeScanStep(1); // Reading resume
+    setResumeScanStep(1);
 
     await new Promise(r => setTimeout(r, 700));
-    setResumeScanStep(2); // Identifying skills
+    setResumeScanStep(2);
 
     await new Promise(r => setTimeout(r, 700));
-    setResumeScanStep(3); // Finding projects
+    setResumeScanStep(3);
 
     await new Promise(r => setTimeout(r, 700));
-    setResumeScanStep(4); // Mapping career requirements
+    setResumeScanStep(4);
 
     await new Promise(r => setTimeout(r, 700));
     setIsAnalyzingResume(false);
@@ -164,165 +342,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       resumeFileName: fileName,
       detectedSkills: newSkills,
       recentActivity: [
-        { id: `act_${Date.now()}`, title: `Resume analyzed: ${fileName}`, timeAgo: 'Just now', type: 'resume' },
+        { id: `act_${Date.now()}`, title: 'Resume analyzed with AI', timeAgo: 'Just now', type: 'resume' },
         ...prev.recentActivity
       ]
     }));
-
-    // Update skills based on uploaded resume
-    setSkills(prev =>
-      prev.map(s => {
-        const isMatched = newSkills.some(d => d.toLowerCase() === s.name.toLowerCase());
-        if (isMatched) {
-          const boostedScore = Math.max(s.userScore, 75);
-          const gap = boostedScore - s.requiredScore;
-          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-          return {
-            ...s,
-            userScore: boostedScore,
-            fromResume: true,
-            gap,
-            status
-          };
-        }
-        return s;
-      })
-    );
-
     triggerConfetti();
   };
 
-  const uploadResumeFile = async (file: File) => {
-    setIsAnalyzingResume(true);
-    setResumeScanStep(1); // Reading resume structure and binary
-
-    // Read file text content if plain text or attempt decoding
-    let extractedText = '';
+  const completeRoadmapModule = async (phaseId: string, moduleId: string) => {
     try {
-      if (file.type.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-        extractedText = await file.text();
-      } else {
-        // Read raw buffer slice to catch plaintext strings in PDFs or documents
-        const buffer = await file.arrayBuffer();
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        extractedText = decoder.decode(buffer.slice(0, 100000));
+      const res = await roadmapService.completeModule(phaseId, moduleId);
+      if (res.success && res.roadmap) {
+        setRoadmapPhases(res.roadmap.phases);
+        if (res.user) setUser(res.user);
+        return;
       }
-    } catch {
-      extractedText = '';
+    } catch (e) {
+      console.warn('Complete module API fallback:', e);
     }
-
-    await new Promise(r => setTimeout(r, 600));
-    setResumeScanStep(2); // Identifying technical proficiencies
-
-    // Match against real skills catalogue
-    const knownSkillsList = [
-      'Python', 'JavaScript', 'TypeScript', 'React', 'Node.js', 'Express',
-      'HTML', 'CSS', 'Tailwind', 'MongoDB', 'PostgreSQL', 'MySQL', 'SQL',
-      'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Linux', 'Git',
-      'CI/CD', 'GitHub Actions', 'Terraform', 'GraphQL', 'REST API',
-      'Next.js', 'Vue', 'Django', 'Flask', 'FastAPI', 'Java', 'C++',
-      'Go', 'Rust', 'Redis', 'Kafka', 'Ansible', 'Bash', 'Figma'
-    ];
-
-    const detectedFromContent: string[] = [];
-    if (extractedText) {
-      const lowerText = extractedText.toLowerCase();
-      knownSkillsList.forEach(s => {
-        // Match word boundaries or substring
-        const regex = new RegExp(`\\b${s.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-        if (regex.test(lowerText) && !detectedFromContent.includes(s)) {
-          detectedFromContent.push(s);
-        }
-      });
-    }
-
-    await new Promise(r => setTimeout(r, 700));
-    setResumeScanStep(3); // Extracting projects and practical experience
-
-    // Default or merge with detected
-    const finalDetected = detectedFromContent.length >= 3
-      ? detectedFromContent
-      : Array.from(new Set([
-          ...detectedFromContent,
-          'React', 'TypeScript', 'Node.js', 'Docker', 'AWS', 'Git', 'Linux', 'REST API'
-        ]));
-
-    await new Promise(r => setTimeout(r, 600));
-    setResumeScanStep(4); // Mapping career requirements to target role
-
-    await new Promise(r => setTimeout(r, 600));
-    setIsAnalyzingResume(false);
-
-    setUser(prev => ({
-      ...prev,
-      resumeUploaded: true,
-      resumeFileName: file.name,
-      detectedSkills: finalDetected,
-      recentActivity: [
-        { id: `act_${Date.now()}`, title: `Uploaded local resume: ${file.name}`, timeAgo: 'Just now', type: 'resume' },
-        ...prev.recentActivity
-      ]
-    }));
-
-    // Dynamically update skills tracker based on uploaded resume skills
-    setSkills(prev => {
-      const updated = prev.map(s => {
-        const isMatched = finalDetected.some(d => d.toLowerCase() === s.name.toLowerCase());
-        if (isMatched) {
-          const newScore = Math.max(s.userScore, 75);
-          const gap = newScore - s.requiredScore;
-          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-          return {
-            ...s,
-            userScore: newScore,
-            fromResume: true,
-            gap,
-            status
-          };
-        }
-        return s;
-      });
-
-      // Also add newly detected skills if not already tracked
-      const existingNames = new Set(updated.map(s => s.name.toLowerCase()));
-      const extraSkills: SkillItem[] = [];
-
-      finalDetected.forEach(skillName => {
-        if (!existingNames.has(skillName.toLowerCase())) {
-          extraSkills.push({
-            id: `sk_custom_${skillName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-            name: skillName,
-            category: 'Languages',
-            userScore: 75,
-            requiredScore: 70,
-            gap: 5,
-            status: 'Strong',
-            verified: false,
-            fromResume: true,
-            fromRoadmap: false
-          });
-        }
-      });
-
-      return [...updated, ...extraSkills];
-    });
-
-    triggerConfetti();
-  };
-
-  const completeRoadmapModule = (phaseId: string, moduleId: string) => {
-    let completedModuleTitle = '';
 
     setRoadmapPhases(prev =>
       prev.map(phase => {
         if (phase.id !== phaseId) return phase;
-        const updatedMods = phase.modules.map(mod => {
-          if (mod.id === moduleId) {
-            completedModuleTitle = mod.title;
-            return { ...mod, completed: true };
-          }
-          return mod;
-        });
+        const updatedMods = phase.modules.map(mod =>
+          mod.id === moduleId ? { ...mod, completed: true } : mod
+        );
         const allCompleted = updatedMods.every(m => m.completed);
         return {
           ...phase,
@@ -332,51 +376,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    // Map module keywords to relevant skills and level them up
-    const lowerMod = completedModuleTitle.toLowerCase();
-    setSkills(prev =>
-      prev.map(skill => {
-        const skillLower = skill.name.toLowerCase();
-        const isTargetSkill =
-          (skillLower === 'linux' && (lowerMod.includes('linux') || lowerMod.includes('bash') || lowerMod.includes('foundation'))) ||
-          (skillLower === 'aws' && (lowerMod.includes('aws') || lowerMod.includes('cloud') || lowerMod.includes('s3') || lowerMod.includes('iam') || lowerMod.includes('vpc'))) ||
-          (skillLower === 'docker' && (lowerMod.includes('docker') || lowerMod.includes('container'))) ||
-          (skillLower === 'kubernetes' && (lowerMod.includes('kubernetes') || lowerMod.includes('k8s'))) ||
-          (skillLower === 'terraform' && (lowerMod.includes('terraform') || lowerMod.includes('infrastructure'))) ||
-          (skillLower === 'git' && (lowerMod.includes('git') || lowerMod.includes('ci/cd') || lowerMod.includes('actions'))) ||
-          lowerMod.includes(skillLower);
-
-        if (isTargetSkill) {
-          const newScore = Math.min(100, skill.userScore + 18);
-          const gap = newScore - skill.requiredScore;
-          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
-          return {
-            ...skill,
-            userScore: newScore,
-            fromRoadmap: true,
-            gap,
-            status
-          };
-        }
-        return skill;
-      })
-    );
-
     setUser(prev => ({
       ...prev,
-      careerReadiness: Math.min(100, prev.careerReadiness + 4),
-      readinessChange: '+16% this month',
-      recentActivity: [
-        { id: `act_${Date.now()}`, title: `Completed roadmap module: ${completedModuleTitle}`, timeAgo: 'Just now', type: 'roadmap' },
-        ...prev.recentActivity
-      ]
+      careerReadiness: Math.min(100, prev.careerReadiness + 3)
     }));
-
-    triggerConfetti();
   };
 
-  const submitChallengeCode = (code: string) => {
+  const submitChallengeCode = async (code: string) => {
     setChallenge(prev => ({ ...prev, initialCode: code, completed: true }));
+
+    try {
+      const res = await challengeService.submitCode(challenge.id, code);
+      if (res.success && res.evaluation) {
+        setEvaluation(res.evaluation);
+        if (res.user) setUser(res.user);
+        setActiveView('ai-evaluation');
+        return;
+      }
+    } catch (e) {
+      console.warn('Challenge submit API fallback:', e);
+    }
+
     setActiveView('ai-evaluation');
   };
 
@@ -403,8 +423,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveView('dashboard');
   };
 
-  const sendChatMessage = (text: string) => {
+  const sendChatMessage = async (text: string) => {
     if (!text.trim()) return;
+
     const userMsg: ChatMessage = {
       id: `usr_${Date.now()}`,
       sender: 'user',
@@ -413,6 +434,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setChatMessages(prev => [...prev, userMsg]);
+
+    try {
+      const res = await aiService.sendMessage(text);
+      if (res.success && res.aiMessage) {
+        setChatMessages(prev => {
+          // Replace user message with backend response if formatted
+          const filtered = prev.filter(m => m.id !== userMsg.id);
+          return [...filtered, res.userMessage, res.aiMessage];
+        });
+        return;
+      }
+    } catch (e) {
+      console.warn('AI chat API fallback:', e);
+    }
 
     setTimeout(() => {
       let reply = "I'm analyzing your skill trajectory. Focusing on practical hands-on challenges and foundational architecture will boost your readiness score quickly!";
@@ -458,9 +493,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 600);
   };
 
-  const applyForJob = (jobId: string) => {
+  const applyForJob = async (jobId: string) => {
     if (!appliedJobIds.includes(jobId)) {
       setAppliedJobIds(prev => [...prev, jobId]);
+
+      try {
+        await jobService.applyForJob(jobId);
+      } catch (e) {
+        console.warn('Job apply API fallback:', e);
+      }
+
       triggerConfetti();
     }
   };
