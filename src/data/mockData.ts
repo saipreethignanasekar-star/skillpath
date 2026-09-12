@@ -33,13 +33,13 @@ export const initialProfile: UserProfile = {
 };
 
 export const defaultSkills: SkillItem[] = [
-  { id: 'sk_linux', name: 'Linux', category: 'Foundation', userScore: 80, requiredScore: 75, gap: 5, status: 'Strong', verified: true },
-  { id: 'sk_docker', name: 'Docker', category: 'DevOps', userScore: 60, requiredScore: 80, gap: -20, status: 'Needs Practice', verified: true },
-  { id: 'sk_aws', name: 'AWS', category: 'Cloud', userScore: 40, requiredScore: 90, gap: -50, status: 'Critical', verified: true },
-  { id: 'sk_k8s', name: 'Kubernetes', category: 'DevOps', userScore: 20, requiredScore: 80, gap: -60, status: 'Critical', verified: false },
-  { id: 'sk_tf', name: 'Terraform', category: 'Tooling', userScore: 10, requiredScore: 70, gap: -60, status: 'Critical', verified: false },
-  { id: 'sk_py', name: 'Python', category: 'Languages', userScore: 90, requiredScore: 70, gap: 20, status: 'Strong', verified: true },
-  { id: 'sk_git', name: 'Git', category: 'Tooling', userScore: 75, requiredScore: 70, gap: 5, status: 'Strong', verified: true }
+  { id: 'sk_linux', name: 'Linux', category: 'Foundation', userScore: 85, requiredScore: 75, gap: 10, status: 'Strong', verified: true, fromResume: true, fromRoadmap: true },
+  { id: 'sk_docker', name: 'Docker', category: 'DevOps', userScore: 65, requiredScore: 80, gap: -15, status: 'Needs Practice', verified: true, fromResume: true, fromRoadmap: false },
+  { id: 'sk_aws', name: 'AWS', category: 'Cloud', userScore: 55, requiredScore: 90, gap: -35, status: 'Needs Practice', verified: true, fromResume: true, fromRoadmap: true },
+  { id: 'sk_git', name: 'Git', category: 'Tooling', userScore: 80, requiredScore: 70, gap: 10, status: 'Strong', verified: true, fromResume: true, fromRoadmap: false },
+  { id: 'sk_py', name: 'Python', category: 'Languages', userScore: 90, requiredScore: 70, gap: 20, status: 'Strong', verified: true, fromResume: true, fromRoadmap: false },
+  { id: 'sk_k8s', name: 'Kubernetes', category: 'DevOps', userScore: 20, requiredScore: 80, gap: -60, status: 'Critical', verified: false, fromResume: false, fromRoadmap: false },
+  { id: 'sk_tf', name: 'Terraform', category: 'Tooling', userScore: 10, requiredScore: 70, gap: -60, status: 'Critical', verified: false, fromResume: false, fromRoadmap: false }
 ];
 
 export const careerRolesList: { role: CareerRole; description: string; icon: string }[] = [

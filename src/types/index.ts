@@ -16,6 +16,8 @@ export interface SkillItem {
   gap: number;           // userScore - requiredScore
   status: 'Strong' | 'Needs Practice' | 'Critical';
   verified?: boolean;
+  fromResume?: boolean;
+  fromRoadmap?: boolean;
 }
 
 export interface ActivityItem {

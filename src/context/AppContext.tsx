@@ -168,6 +168,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...prev.recentActivity
       ]
     }));
+
+    // Update skills based on uploaded resume
+    setSkills(prev =>
+      prev.map(s => {
+        const isMatched = newSkills.some(d => d.toLowerCase() === s.name.toLowerCase());
+        if (isMatched) {
+          const boostedScore = Math.max(s.userScore, 75);
+          const gap = boostedScore - s.requiredScore;
+          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
+          return {
+            ...s,
+            userScore: boostedScore,
+            fromResume: true,
+            gap,
+            status
+          };
+        }
+        return s;
+      })
+    );
+
     triggerConfetti();
   };
 
@@ -243,33 +264,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]
     }));
 
-    // Dynamically update skills gap comparison if matching user skills
-    setSkills(prev =>
-      prev.map(s => {
-        if (finalDetected.some(d => d.toLowerCase() === s.name.toLowerCase())) {
+    // Dynamically update skills tracker based on uploaded resume skills
+    setSkills(prev => {
+      const updated = prev.map(s => {
+        const isMatched = finalDetected.some(d => d.toLowerCase() === s.name.toLowerCase());
+        if (isMatched) {
           const newScore = Math.max(s.userScore, 75);
           const gap = newScore - s.requiredScore;
+          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
           return {
             ...s,
             userScore: newScore,
+            fromResume: true,
             gap,
-            status: gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical'
+            status
           };
         }
         return s;
-      })
-    );
+      });
+
+      // Also add newly detected skills if not already tracked
+      const existingNames = new Set(updated.map(s => s.name.toLowerCase()));
+      const extraSkills: SkillItem[] = [];
+
+      finalDetected.forEach(skillName => {
+        if (!existingNames.has(skillName.toLowerCase())) {
+          extraSkills.push({
+            id: `sk_custom_${skillName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+            name: skillName,
+            category: 'Languages',
+            userScore: 75,
+            requiredScore: 70,
+            gap: 5,
+            status: 'Strong',
+            verified: false,
+            fromResume: true,
+            fromRoadmap: false
+          });
+        }
+      });
+
+      return [...updated, ...extraSkills];
+    });
 
     triggerConfetti();
   };
 
   const completeRoadmapModule = (phaseId: string, moduleId: string) => {
+    let completedModuleTitle = '';
+
     setRoadmapPhases(prev =>
       prev.map(phase => {
         if (phase.id !== phaseId) return phase;
-        const updatedMods = phase.modules.map(mod =>
-          mod.id === moduleId ? { ...mod, completed: true } : mod
-        );
+        const updatedMods = phase.modules.map(mod => {
+          if (mod.id === moduleId) {
+            completedModuleTitle = mod.title;
+            return { ...mod, completed: true };
+          }
+          return mod;
+        });
         const allCompleted = updatedMods.every(m => m.completed);
         return {
           ...phase,
@@ -279,10 +332,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
+    // Map module keywords to relevant skills and level them up
+    const lowerMod = completedModuleTitle.toLowerCase();
+    setSkills(prev =>
+      prev.map(skill => {
+        const skillLower = skill.name.toLowerCase();
+        const isTargetSkill =
+          (skillLower === 'linux' && (lowerMod.includes('linux') || lowerMod.includes('bash') || lowerMod.includes('foundation'))) ||
+          (skillLower === 'aws' && (lowerMod.includes('aws') || lowerMod.includes('cloud') || lowerMod.includes('s3') || lowerMod.includes('iam') || lowerMod.includes('vpc'))) ||
+          (skillLower === 'docker' && (lowerMod.includes('docker') || lowerMod.includes('container'))) ||
+          (skillLower === 'kubernetes' && (lowerMod.includes('kubernetes') || lowerMod.includes('k8s'))) ||
+          (skillLower === 'terraform' && (lowerMod.includes('terraform') || lowerMod.includes('infrastructure'))) ||
+          (skillLower === 'git' && (lowerMod.includes('git') || lowerMod.includes('ci/cd') || lowerMod.includes('actions'))) ||
+          lowerMod.includes(skillLower);
+
+        if (isTargetSkill) {
+          const newScore = Math.min(100, skill.userScore + 18);
+          const gap = newScore - skill.requiredScore;
+          const status: SkillItem['status'] = gap >= 0 ? 'Strong' : gap >= -25 ? 'Needs Practice' : 'Critical';
+          return {
+            ...skill,
+            userScore: newScore,
+            fromRoadmap: true,
+            gap,
+            status
+          };
+        }
+        return skill;
+      })
+    );
+
     setUser(prev => ({
       ...prev,
-      careerReadiness: Math.min(100, prev.careerReadiness + 3)
+      careerReadiness: Math.min(100, prev.careerReadiness + 4),
+      readinessChange: '+16% this month',
+      recentActivity: [
+        { id: `act_${Date.now()}`, title: `Completed roadmap module: ${completedModuleTitle}`, timeAgo: 'Just now', type: 'roadmap' },
+        ...prev.recentActivity
+      ]
     }));
+
+    triggerConfetti();
   };
 
   const submitChallengeCode = (code: string) => {

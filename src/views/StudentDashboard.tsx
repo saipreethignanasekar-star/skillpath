@@ -73,21 +73,28 @@ export const StudentDashboard: React.FC = () => {
 
         {/* Your Skills Widget */}
         <div className="lg:col-span-7 bg-white p-6 rounded-xl border border-[#dadce0] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-base font-medium text-[#202124] leading-none">Your Skills</h2>
-              <p className="text-xs text-[#5f6368] mt-1">Current proficiency breakdown</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-medium text-[#202124] leading-none">Your Skills</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#1967d2] font-medium border border-[#d2e3fc]">
+                  Resume & Roadmap Synced
+                </span>
+              </div>
+              <p className="text-xs text-[#5f6368] mt-1">
+                Proficiency tracked from your uploaded resume and roadmap milestones.
+              </p>
             </div>
             <button
               onClick={() => setActiveView('skill-gap')}
-              className="text-xs font-medium text-[#1a73e8] hover:underline flex items-center gap-1"
+              className="text-xs font-medium text-[#1a73e8] hover:underline flex items-center gap-1 shrink-0"
             >
               <span>View gap analysis</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-3.5 flex-1 justify-center flex flex-col">
+          <div className="space-y-3.5 flex-1 justify-center flex flex-col my-1">
             {skills.slice(0, 6).map((skill) => {
               const color =
                 skill.userScore >= 75
@@ -101,7 +108,19 @@ export const StudentDashboard: React.FC = () => {
               return (
                 <div key={skill.id} className="space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-medium text-[#3c4043]">{skill.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-[#3c4043]">{skill.name}</span>
+                      {skill.fromResume && (
+                        <span className="text-[10px] px-1.5 py-0.2 bg-[#f1f3f4] text-[#5f6368] rounded border border-[#dadce0]">
+                          Resume
+                        </span>
+                      )}
+                      {skill.fromRoadmap && (
+                        <span className="text-[10px] px-1.5 py-0.2 bg-[#e6f4ea] text-[#137333] rounded border border-[#ceead6]">
+                          Roadmap
+                        </span>
+                      )}
+                    </div>
                     <span className="font-medium text-[#202124]">{skill.userScore}%</span>
                   </div>
                   <div className="h-1.5 w-full bg-[#e8eaed] rounded-full overflow-hidden">
@@ -113,6 +132,18 @@ export const StudentDashboard: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+
+          <div className="pt-3 border-t border-[#f1f3f4] flex items-center justify-between text-[11px] text-[#5f6368]">
+            <span>
+              {user.resumeFileName ? `Synced with ${user.resumeFileName}` : 'Upload resume to sync initial skills'}
+            </span>
+            <button
+              onClick={() => setActiveView('roadmap')}
+              className="text-[#1a73e8] hover:underline font-medium cursor-pointer"
+            >
+              Complete roadmap modules to level up
+            </button>
           </div>
         </div>
       </div>
