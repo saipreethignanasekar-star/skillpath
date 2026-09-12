@@ -152,28 +152,6 @@ export const ResumeAnalysisPage: React.FC = () => {
             </div>
           )}
 
-          {/* Quick preset resume buttons */}
-          <div className="w-full mt-6 pt-6 border-t border-[#f1f3f4] text-left">
-            <span className="text-xs font-medium text-[#5f6368] uppercase tracking-wider block mb-2">
-              Or test with sample resumes:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {[
-                'Rahul_Kumar_Resume_2026.pdf',
-                'Priya_Sharma_DevOps_CV.pdf',
-                'Amit_Patel_FullStack.docx'
-              ].map(file => (
-                <button
-                  key={file}
-                  onClick={() => handleSimulatedUpload(file)}
-                  className="px-3 py-1.5 rounded-full border border-[#dadce0] hover:border-[#bdc1c6] hover:bg-[#f8f9fa] text-xs font-normal text-[#3c4043] flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5 text-[#1a73e8]" />
-                  <span>{file}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Right: AI Analysis Status */}

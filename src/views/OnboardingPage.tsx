@@ -201,17 +201,6 @@ export const OnboardingPage: React.FC = () => {
                 </span>
                 <span className="text-xs text-[#5f6368] mt-1 block">Supports PDF, DOC, DOCX, TXT up to 5MB</span>
               </label>
-
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <span className="text-xs text-[#5f6368]">Or try sample:</span>
-                <button
-                  type="button"
-                  onClick={() => uploadResumeSimulated('Rahul_Kumar_Resume.pdf')}
-                  className="text-xs text-[#1a73e8] hover:underline font-medium cursor-pointer"
-                >
-                  Load sample resume (Rahul_Kumar.pdf)
-                </button>
-              </div>
             </div>
           </div>
         )}
