@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Compass, ArrowRight } from 'lucide-react';
+import { Compass, ArrowRight, AlertCircle } from 'lucide-react';
 import type { CareerRole } from '../types';
 
 export const SignUpPage: React.FC = () => {
@@ -14,9 +14,19 @@ export const SignUpPage: React.FC = () => {
     college: '',
     currentYear: '1st Year'
   });
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage('Passwords do not match');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long');
+      return;
+    }
+    setErrorMessage('');
     signup({
       name: formData.name,
       email: formData.email,
@@ -46,6 +56,13 @@ export const SignUpPage: React.FC = () => {
           <p className="text-sm text-[#5f6368] mt-1">Start building your verified career profile</p>
         </div>
 
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded-lg bg-[#fce8e6] border border-[#fad2cf] text-[#d93025] text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -56,7 +73,10 @@ export const SignUpPage: React.FC = () => {
                 type="text"
                 required
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="Rahul Kumar"
                 className="w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border border-[#dadce0] focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] text-[#202124] transition-all"
               />
@@ -70,7 +90,10 @@ export const SignUpPage: React.FC = () => {
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  if (errorMessage) setErrorMessage('');
+                }}
                 placeholder="you@example.com"
                 className="w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border border-[#dadce0] focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] text-[#202124] transition-all"
               />
@@ -86,8 +109,16 @@ export const SignUpPage: React.FC = () => {
                 type="password"
                 required
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border border-[#dadce0] focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] text-[#202124] transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, password: e.target.value });
+                  if (errorMessage) setErrorMessage('');
+                }}
+                placeholder="At least 6 characters"
+                className={`w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border text-[#202124] transition-all focus:outline-none ${
+                  errorMessage && (formData.password !== formData.confirmPassword || formData.password.length < 6)
+                    ? 'border-[#d93025] focus:border-[#d93025] focus:ring-1 focus:ring-[#d93025]'
+                    : 'border-[#dadce0] focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]'
+                }`}
               />
             </div>
 
@@ -99,8 +130,16 @@ export const SignUpPage: React.FC = () => {
                 type="password"
                 required
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border border-[#dadce0] focus:outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8] text-[#202124] transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, confirmPassword: e.target.value });
+                  if (errorMessage) setErrorMessage('');
+                }}
+                placeholder="Re-enter password"
+                className={`w-full px-3.5 py-2.5 text-sm bg-white rounded-lg border text-[#202124] transition-all focus:outline-none ${
+                  errorMessage && formData.password !== formData.confirmPassword
+                    ? 'border-[#d93025] focus:border-[#d93025] focus:ring-1 focus:ring-[#d93025]'
+                    : 'border-[#dadce0] focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]'
+                }`}
               />
             </div>
           </div>
