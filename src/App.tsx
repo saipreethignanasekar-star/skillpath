@@ -14,7 +14,6 @@ import { ChallengesListPage } from './views/ChallengesListPage';
 import { ProveYourSkillPage } from './views/ProveYourSkillPage';
 import { AIEvaluationPage } from './views/AIEvaluationPage';
 import { AIMentorPage } from './views/AIMentorPage';
-import { AdminOverviewPage } from './views/AdminOverviewPage';
 import { JobMatchingPage } from './views/JobMatchingPage';
 import { ProfilePage } from './views/ProfilePage';
 import { Layers } from 'lucide-react';
@@ -47,7 +46,6 @@ const AppContent: React.FC = () => {
           {activeView === 'challenge-detail' && <ProveYourSkillPage />}
           {activeView === 'ai-evaluation' && <AIEvaluationPage />}
           {activeView === 'ai-mentor' && <AIMentorPage />}
-          {activeView === 'admin-overview' && <AdminOverviewPage />}
           {activeView === 'jobs' && <JobMatchingPage />}
           {activeView === 'profile' && <ProfilePage />}
         </main>
@@ -98,14 +96,11 @@ const AppContent: React.FC = () => {
             <button onClick={() => setActiveView('ai-mentor')} className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-[#f1f3f4] text-[#3c4043] hover:text-[#202124] transition-colors">
               11. AI Mentor Chat
             </button>
-            <button onClick={() => setActiveView('admin-overview')} className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-[#f1f3f4] text-[#3c4043] hover:text-[#202124] transition-colors">
-              12. Cohort Analytics Overview
-            </button>
             <button onClick={() => setActiveView('jobs')} className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-[#f1f3f4] text-[#3c4043] hover:text-[#202124] transition-colors">
-              13. Job Matching
+              12. Job Matching
             </button>
             <button onClick={() => setActiveView('profile')} className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-[#f1f3f4] text-[#3c4043] hover:text-[#202124] transition-colors">
-              14. My Profile (Rahul Kumar)
+              13. My Profile (Rahul Kumar)
             </button>
           </div>
         </div>

@@ -142,5 +142,4 @@ export type ActiveView =
   | 'challenge-detail'
   | 'ai-evaluation'
   | 'ai-mentor'
-  | 'jobs'
-  | 'admin-overview';
+  | 'jobs';

@@ -12,7 +12,6 @@ import {
   HelpCircle,
   LogOut,
   X,
-  Building2,
   FileText
 } from 'lucide-react';
 import type { ActiveView } from '../../types';
@@ -29,7 +28,6 @@ export const Sidebar: React.FC = () => {
     { id: 'challenges', label: 'Practical Challenges', icon: Award },
     { id: 'jobs', label: 'Job Matching', icon: Briefcase },
     { id: 'ai-mentor', label: 'AI Mentor', icon: Bot },
-    { id: 'admin-overview', label: 'Cohort Overview', icon: Building2 },
   ];
 
   const handleNavClick = (id: ActiveView) => {
