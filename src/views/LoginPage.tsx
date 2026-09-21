@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Compass, ArrowRight } from 'lucide-react';
+import { Compass, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { setActiveView, login } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+    if (!password) {
+      setErrorMessage('Please enter your password.');
+      return;
+    }
     login(email);
   };
 
@@ -32,6 +38,32 @@ export const LoginPage: React.FC = () => {
           <h2 className="text-2xl font-normal text-[#202124] tracking-tight mt-2">Sign in</h2>
           <p className="text-sm text-[#5f6368] mt-1">to continue to SkillX Career Platform</p>
         </div>
+
+        {/* Demo Account Quick Hint / Autofill */}
+        <div className="mb-4 p-3 rounded-xl bg-[#e8f0fe]/70 border border-[#d2e3fc] flex items-center justify-between text-xs text-[#1a73e8]">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span>Demo: <strong>rahul@example.com</strong> (pw: password123)</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('rahul@example.com');
+              setPassword('password123');
+              setErrorMessage('');
+            }}
+            className="text-xs font-semibold underline hover:text-[#1557d0] cursor-pointer"
+          >
+            Autofill
+          </button>
+        </div>
+
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded-lg bg-[#fce8e6] border border-[#fad2cf] text-[#d93025] text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -101,7 +133,10 @@ export const LoginPage: React.FC = () => {
         <div className="space-y-2.5">
           <button
             type="button"
-            onClick={() => login('rahul.google@example.com')}
+            onClick={() => {
+              setErrorMessage('');
+              login('rahul.google@example.com');
+            }}
             className="w-full py-2 px-4 rounded-full border border-[#dadce0] bg-white hover:bg-[#f8f9fa] text-[#3c4043] text-xs font-medium flex items-center justify-center gap-2.5 transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -127,7 +162,10 @@ export const LoginPage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => login('rahul.github@example.com')}
+            onClick={() => {
+              setErrorMessage('');
+              login('rahul.github@example.com');
+            }}
             className="w-full py-2 px-4 rounded-full border border-[#dadce0] bg-white hover:bg-[#f8f9fa] text-[#3c4043] text-xs font-medium flex items-center justify-center gap-2.5 transition-colors"
           >
             <svg className="w-4 h-4 fill-[#202124]" viewBox="0 0 24 24">
