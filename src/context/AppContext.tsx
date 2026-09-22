@@ -11,6 +11,7 @@ import type {
   ChatActionCard,
   StudentCohortMetric,
   CareerRole,
+  PredefinedCareerRole,
   ActiveView
 } from '../types';
 import {
@@ -59,7 +60,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const ROLE_SKILL_TEMPLATES: Record<CareerRole, { name: string; category: SkillItem['category']; requiredScore: number }[]> = {
+export const ROLE_SKILL_TEMPLATES: Record<PredefinedCareerRole, { name: string; category: SkillItem['category']; requiredScore: number }[]> = {
   'Cloud Engineer': [
     { name: 'Linux', category: 'Foundation', requiredScore: 75 },
     { name: 'AWS', category: 'Cloud', requiredScore: 90 },
@@ -121,7 +122,7 @@ export const ROLE_SKILL_TEMPLATES: Record<CareerRole, { name: string; category: 
   ]
 };
 
-export const ROLE_ROADMAP_TEMPLATES: Record<CareerRole, RoadmapPhase[]> = {
+export const ROLE_ROADMAP_TEMPLATES: Record<PredefinedCareerRole, RoadmapPhase[]> = {
   'Cloud Engineer': [
     {
       id: 'ph_1',
@@ -466,7 +467,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Helper to sync skills, roadmap & readiness score based on target role & detected skills
   const syncUserTargetRoleAndSkills = (role: CareerRole, detectedSkills: string[]) => {
-    const templates = ROLE_SKILL_TEMPLATES[role] || ROLE_SKILL_TEMPLATES['Cloud Engineer'];
+    const templates: { name: string; category: SkillItem['category']; requiredScore: number }[] =
+      (ROLE_SKILL_TEMPLATES as Record<string, { name: string; category: SkillItem['category']; requiredScore: number }[]>)[role] || [
+        { name: `${role} Fundamentals`, category: 'Foundation', requiredScore: 85 },
+        { name: 'Core Architecture & Patterns', category: 'Foundation', requiredScore: 80 },
+        { name: 'Primary Programming Language', category: 'Languages', requiredScore: 80 },
+        { name: 'Git & Version Control', category: 'Tooling', requiredScore: 75 },
+        { name: 'Testing & Quality Assurance', category: 'Tooling', requiredScore: 75 },
+        { name: 'Cloud & Production Deployment', category: 'Cloud', requiredScore: 70 }
+      ];
     const lowerDetected = new Set(detectedSkills.map(d => d.toLowerCase()));
 
     let totalUserScore = 0;
@@ -517,7 +526,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     const newReadiness = totalReqScore > 0 ? Math.round((totalUserScore / totalReqScore) * 100) : 0;
-    const newRoadmap = ROLE_ROADMAP_TEMPLATES[role] || ROLE_ROADMAP_TEMPLATES['Cloud Engineer'];
+    const newRoadmap: RoadmapPhase[] = (ROLE_ROADMAP_TEMPLATES as Record<string, RoadmapPhase[]>)[role] || [
+      {
+        id: 'ph_custom_1',
+        number: 1,
+        title: `Phase 1 - ${role} Foundations & Tools`,
+        duration: '2 weeks',
+        status: 'in_progress',
+        modules: [
+          { id: 'mod_c1', title: `${role} Principles & Language Syntax`, completed: false, duration: '1 week', description: 'Master foundational syntax, standards & development setup' },
+          { id: 'mod_c2', title: 'Data Structures, Architecture & Git', completed: false, duration: '1 week', description: 'Version control, system workflows & modular design' }
+        ]
+      },
+      {
+        id: 'ph_custom_2',
+        number: 2,
+        title: `Phase 2 - Applied ${role} Systems & Projects`,
+        duration: '3 weeks',
+        status: 'upcoming',
+        modules: [
+          { id: 'mod_c3', title: 'Hands-on Deliverables & Testing', completed: false, duration: '10 days', description: 'Build end-to-end practical projects and unit testing' },
+          { id: 'mod_c4', title: 'Performance Optimization & Deployment', completed: false, duration: '8 days', description: 'Benchmarking, security and production readiness' }
+        ]
+      }
+    ];
 
     setSkills(newSkills);
     setRoadmapPhases(newRoadmap);

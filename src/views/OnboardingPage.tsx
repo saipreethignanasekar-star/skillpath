@@ -15,9 +15,10 @@ import {
   CheckCircle2,
   GraduationCap,
   Camera,
-  Trash2
+  Trash2,
+  Sparkles
 } from 'lucide-react';
-import type { CareerRole } from '../types';
+import type { CareerRole, PredefinedCareerRole } from '../types';
 
 export const OnboardingPage: React.FC = () => {
   const { user, targetRole, setTargetRole, setActiveView, uploadResumeFile, updateUserProfile } = useApp();
@@ -39,7 +40,7 @@ export const OnboardingPage: React.FC = () => {
   const [stepError, setStepError] = useState<string | null>(null);
 
   const careerOptions: {
-    role: CareerRole;
+    role: PredefinedCareerRole;
     icon: React.FC<{ className?: string }>;
     skills: string;
     description: string;
@@ -52,6 +53,32 @@ export const OnboardingPage: React.FC = () => {
     { role: 'Cybersecurity Engineer', icon: Shield, skills: 'Network • Linux • Security', description: 'Defense & Threat Mitigation' },
     { role: 'Software Developer', icon: Code, skills: 'DSA • Java • System Design', description: 'Data Structures & Core Systems' },
   ];
+
+  const isPredefinedRole = careerOptions.some(opt => opt.role === targetRole);
+  const [isOtherSelected, setIsOtherSelected] = useState<boolean>(() => !isPredefinedRole && Boolean(targetRole));
+  const [customRoleInput, setCustomRoleInput] = useState<string>(() => (!isPredefinedRole && targetRole ? targetRole : ''));
+
+  const handleSelectPredefined = (role: PredefinedCareerRole) => {
+    setIsOtherSelected(false);
+    setTargetRole(role);
+    setStepError(null);
+  };
+
+  const handleSelectOther = () => {
+    setIsOtherSelected(true);
+    if (customRoleInput.trim()) {
+      setTargetRole(customRoleInput.trim());
+    }
+    setStepError(null);
+  };
+
+  const handleCustomRoleChange = (val: string) => {
+    setCustomRoleInput(val);
+    if (val.trim()) {
+      setTargetRole(val.trim());
+      setStepError(null);
+    }
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,6 +134,19 @@ export const OnboardingPage: React.FC = () => {
       });
 
       setCurrentStep(2);
+      return;
+    }
+
+    // Validate Step 2
+    if (currentStep === 2) {
+      if (isOtherSelected && !customRoleInput.trim()) {
+        setStepError('Please enter your desired career role to proceed.');
+        return;
+      }
+      if (isOtherSelected && customRoleInput.trim()) {
+        setTargetRole(customRoleInput.trim());
+      }
+      setCurrentStep(3);
       return;
     }
 
@@ -379,95 +419,160 @@ export const OnboardingPage: React.FC = () => {
 
         {/* STEP 2: Target Career Role Selection */}
         {currentStep === 2 && (
-          <div className="space-y-5 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             <div className="text-center space-y-1.5">
               <h1 className="text-2xl sm:text-3xl font-normal text-[#202124] tracking-tight">
                 What career are you working toward?
               </h1>
               <p className="text-xs sm:text-sm text-[#5f6368] max-w-md mx-auto">
-                Select your target role to generate your tailored curriculum & skill benchmarks.
+                Select your target role or enter your desired career to generate your tailored curriculum & skill benchmarks.
               </p>
             </div>
 
-            {/* Balanced Rows & Columns: 2 cols on mobile/tablet, 4 cols on desktop with 7th card spanning */}
+            {stepError && (
+              <div className="p-3 bg-[#fce8e6] border border-[#f5c6cb] text-[#d93025] rounded-xl text-xs font-medium text-center">
+                {stepError}
+              </div>
+            )}
+
+            {/* Balanced 8-Card Grid: 2 cols on mobile/tablet (4 rows), 4 cols on desktop (2 rows) */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-              {careerOptions.map((opt, index) => {
+              {careerOptions.map((opt) => {
                 const Icon = opt.icon;
-                const isSelected = targetRole === opt.role;
-                const isLast = index === careerOptions.length - 1;
+                const isSelected = !isOtherSelected && targetRole === opt.role;
 
                 return (
                   <button
                     key={opt.role}
                     type="button"
-                    onClick={() => setTargetRole(opt.role)}
+                    onClick={() => handleSelectPredefined(opt.role)}
                     className={`p-3 sm:p-4 rounded-xl border text-left transition-all relative cursor-pointer flex flex-col justify-between min-h-[96px] sm:min-h-[112px] ${
                       isSelected
                         ? 'border-[#1a73e8] bg-[#e8f0fe]/60 ring-2 ring-[#1a73e8] shadow-xs'
                         : 'border-[#dadce0] bg-white hover:border-[#1a73e8]/40 hover:bg-[#f8f9fa] shadow-2xs'
-                    } ${isLast ? 'col-span-2 lg:col-span-2' : ''}`}
+                    }`}
                   >
-                    {isLast ? (
-                      /* Balanced Wide Card for Software Developer across 2 columns */
-                      <div className="flex items-center justify-between gap-3 w-full h-full">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                              isSelected ? 'bg-[#1a73e8] text-white shadow-xs' : 'bg-[#f1f3f4] text-[#5f6368]'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.8]" />
-                          </div>
-                          <div className="min-w-0">
-                            <span className={`text-xs sm:text-sm font-medium block leading-tight truncate ${isSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
-                              {opt.role}
-                            </span>
-                            <span className="text-[10px] sm:text-[11px] text-[#5f6368] block mt-0.5 truncate">
-                              {opt.skills}
-                            </span>
-                          </div>
-                        </div>
-                        {isSelected ? (
-                          <div className="w-5 h-5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center shadow-xs shrink-0">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                          </div>
-                        ) : (
-                          <div className="w-4 h-4 rounded-full border-2 border-[#dadce0] shrink-0" />
-                        )}
+                    <div className="flex items-start justify-between w-full mb-1.5 sm:mb-2">
+                      <div
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${
+                          isSelected ? 'bg-[#1a73e8] text-white shadow-xs' : 'bg-[#f1f3f4] text-[#5f6368]'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.8]" />
                       </div>
-                    ) : (
-                      /* Standard Grid Card */
-                      <>
-                        <div className="flex items-start justify-between w-full mb-1.5 sm:mb-2">
-                          <div
-                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${
-                              isSelected ? 'bg-[#1a73e8] text-white shadow-xs' : 'bg-[#f1f3f4] text-[#5f6368]'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.8]" />
-                          </div>
-                          {isSelected ? (
-                            <div className="w-5 h-5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center shadow-xs">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                            </div>
-                          ) : (
-                            <div className="w-4 h-4 rounded-full border-2 border-[#dadce0]" />
-                          )}
+                      {isSelected ? (
+                        <div className="w-5 h-5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center shadow-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
                         </div>
-                        <div className="space-y-0.5">
-                          <span className={`text-xs sm:text-sm font-medium block leading-tight truncate ${isSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
-                            {opt.role}
-                          </span>
-                          <span className="text-[10px] sm:text-[11px] text-[#5f6368] block leading-tight truncate">
-                            {opt.skills}
-                          </span>
-                        </div>
-                      </>
-                    )}
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border-2 border-[#dadce0]" />
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className={`text-xs sm:text-sm font-medium block leading-tight truncate ${isSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
+                        {opt.role}
+                      </span>
+                      <span className="text-[10px] sm:text-[11px] text-[#5f6368] block leading-tight truncate">
+                        {opt.skills}
+                      </span>
+                    </div>
                   </button>
                 );
               })}
+
+              {/* 8th Card: Others */}
+              <button
+                type="button"
+                onClick={handleSelectOther}
+                className={`p-3 sm:p-4 rounded-xl border text-left transition-all relative cursor-pointer flex flex-col justify-between min-h-[96px] sm:min-h-[112px] ${
+                  isOtherSelected
+                    ? 'border-[#1a73e8] bg-[#e8f0fe]/60 ring-2 ring-[#1a73e8] shadow-xs'
+                    : 'border-[#dadce0] bg-white hover:border-[#1a73e8]/40 hover:bg-[#f8f9fa] shadow-2xs'
+                }`}
+              >
+                <div className="flex items-start justify-between w-full mb-1.5 sm:mb-2">
+                  <div
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${
+                      isOtherSelected ? 'bg-[#1a73e8] text-white shadow-xs' : 'bg-[#f1f3f4] text-[#5f6368]'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.8]" />
+                  </div>
+                  {isOtherSelected ? (
+                    <div className="w-5 h-5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center shadow-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-[#dadce0]" />
+                  )}
+                </div>
+                <div className="space-y-0.5">
+                  <span className={`text-xs sm:text-sm font-medium block leading-tight truncate ${isOtherSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
+                    {customRoleInput.trim() ? customRoleInput.trim() : 'Others'}
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] text-[#5f6368] block leading-tight truncate">
+                    {customRoleInput.trim() ? 'Custom target career' : 'Enter desired career'}
+                  </span>
+                </div>
+              </button>
             </div>
+
+            {/* Custom Career Role Input Drawer when "Others" is selected */}
+            {isOtherSelected && (
+              <div className="p-4 sm:p-5 rounded-2xl border border-[#1a73e8] bg-white shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-[#202124]">
+                    Enter your desired career role <span className="text-[#d93025]">*</span>
+                  </label>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#1967d2] font-medium">
+                    Personalized Path
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={customRoleInput}
+                  onChange={(e) => handleCustomRoleChange(e.target.value)}
+                  placeholder="e.g. Mobile App Developer, Game Developer, Blockchain Engineer..."
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-[#f8f9fa] rounded-xl border border-[#dadce0] focus:bg-white focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  autoFocus
+                />
+                
+                {/* Popular Role Quick Suggestions */}
+                <div className="mt-3">
+                  <span className="text-[11px] text-[#5f6368] font-medium block mb-1.5">
+                    Popular suggestions:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      'Mobile App Developer',
+                      'Game Developer',
+                      'Blockchain Engineer',
+                      'UI/UX Designer',
+                      'Product Manager',
+                      'Cloud Security Architect'
+                    ].map((roleSuggestion) => (
+                      <button
+                        key={roleSuggestion}
+                        type="button"
+                        onClick={() => handleCustomRoleChange(roleSuggestion)}
+                        className={`text-[11px] px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                          customRoleInput.trim().toLowerCase() === roleSuggestion.toLowerCase()
+                            ? 'bg-[#1a73e8] text-white border-[#1a73e8]'
+                            : 'bg-[#f8f9fa] hover:bg-[#e8f0fe] text-[#3c4043] hover:text-[#1a73e8] border-[#dadce0]'
+                        }`}
+                      >
+                        + {roleSuggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-[#5f6368] mt-3 flex items-center gap-1.5 pt-2.5 border-t border-[#f1f3f4]">
+                  <Sparkles className="w-3.5 h-3.5 text-[#1a73e8] shrink-0" />
+                  <span>Our AI will dynamically generate customized skill benchmarks and an end-to-end roadmap for this career.</span>
+                </p>
+              </div>
+            )}
           </div>
         )}
 

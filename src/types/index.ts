@@ -1,4 +1,4 @@
-export type CareerRole =
+export type PredefinedCareerRole =
   | 'Cloud Engineer'
   | 'DevOps Engineer'
   | 'Full Stack Developer'
@@ -6,6 +6,8 @@ export type CareerRole =
   | 'AI/ML Engineer'
   | 'Cybersecurity Engineer'
   | 'Software Developer';
+
+export type CareerRole = PredefinedCareerRole | string;
 
 export interface SkillItem {
   id: string;

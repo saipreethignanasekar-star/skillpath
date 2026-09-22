@@ -51,6 +51,11 @@ export const SkillGapAnalysisPage: React.FC = () => {
                   {r}
                 </option>
               ))}
+              {!roles.includes(targetRole) && targetRole && (
+                <option value={targetRole}>
+                  {targetRole} (Custom)
+                </option>
+              )}
             </select>
             <ChevronDown className="w-4 h-4 text-[#5f6368] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
