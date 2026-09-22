@@ -38,14 +38,19 @@ export const OnboardingPage: React.FC = () => {
 
   const [stepError, setStepError] = useState<string | null>(null);
 
-  const careerOptions: { role: CareerRole; icon: React.FC<{ className?: string }> }[] = [
-    { role: 'Cloud Engineer', icon: Cloud },
-    { role: 'DevOps Engineer', icon: Repeat },
-    { role: 'Full Stack Developer', icon: Layers },
-    { role: 'Data Analyst', icon: BarChart2 },
-    { role: 'AI/ML Engineer', icon: Cpu },
-    { role: 'Cybersecurity Engineer', icon: Shield },
-    { role: 'Software Developer', icon: Code },
+  const careerOptions: {
+    role: CareerRole;
+    icon: React.FC<{ className?: string }>;
+    skills: string;
+    description: string;
+  }[] = [
+    { role: 'Cloud Engineer', icon: Cloud, skills: 'AWS • Linux • Docker', description: 'Infrastructure & Cloud Services' },
+    { role: 'DevOps Engineer', icon: Repeat, skills: 'CI/CD • Kubernetes • Terraform', description: 'Automation & CI/CD Pipelines' },
+    { role: 'Full Stack Developer', icon: Layers, skills: 'React • Node.js • APIs', description: 'Web Applications & APIs' },
+    { role: 'Data Analyst', icon: BarChart2, skills: 'SQL • Python • Tableau', description: 'Business Intelligence & Data' },
+    { role: 'AI/ML Engineer', icon: Cpu, skills: 'Python • PyTorch • ML', description: 'Machine Learning & Models' },
+    { role: 'Cybersecurity Engineer', icon: Shield, skills: 'Network • Linux • Security', description: 'Defense & Threat Mitigation' },
+    { role: 'Software Developer', icon: Code, skills: 'DSA • Java • System Design', description: 'Data Structures & Core Systems' },
   ];
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,43 +118,46 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col justify-between p-4 sm:p-8">
-      {/* Top Header */}
-      <div className="max-w-4xl mx-auto w-full flex items-center justify-between py-2">
-        <div
-          onClick={() => setActiveView('landing')}
-          className="flex items-center gap-2 cursor-pointer select-none"
-        >
-          <div className="w-8 h-8 rounded-lg bg-[#e8f0fe] flex items-center justify-center text-[#1a73e8]">
-            <Compass className="w-5 h-5 stroke-[2.2]" />
+    <div className="h-screen max-h-screen overflow-hidden bg-[#f8f9fa] flex flex-col">
+      {/* Static Top Header */}
+      <header className="shrink-0 bg-white border-b border-[#dadce0] px-4 sm:px-8 py-3.5 z-30 shadow-2xs">
+        <div className="max-w-4xl mx-auto w-full flex items-center justify-between">
+          <div
+            onClick={() => setActiveView('landing')}
+            className="flex items-center gap-2 cursor-pointer select-none"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#e8f0fe] flex items-center justify-center text-[#1a73e8]">
+              <Compass className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <span className="text-xl font-medium tracking-tight text-[#202124]">
+              Skill<span className="text-[#1a73e8] font-bold">X</span>
+            </span>
           </div>
-          <span className="text-xl font-medium tracking-tight text-[#202124]">
-            Skill<span className="text-[#1a73e8] font-bold">X</span>
-          </span>
-        </div>
 
-        {/* Step Indicator */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4].map(step => (
-              <div
-                key={step}
-                className={`h-1.5 rounded-full transition-all ${
-                  step === currentStep
-                    ? 'w-6 bg-[#1a73e8]'
-                    : step < currentStep
-                    ? 'w-2 bg-[#1a73e8]/50'
-                    : 'w-2 bg-[#dadce0]'
-                }`}
-              />
-            ))}
+          {/* Step Indicator */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3, 4].map(step => (
+                <div
+                  key={step}
+                  className={`h-1.5 rounded-full transition-all ${
+                    step === currentStep
+                      ? 'w-6 bg-[#1a73e8]'
+                      : step < currentStep
+                      ? 'w-2 bg-[#1a73e8]/50'
+                      : 'w-2 bg-[#dadce0]'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-xs font-medium text-[#5f6368]">Step {currentStep} of 4</span>
           </div>
-          <span className="text-xs font-medium text-[#5f6368]">Step {currentStep} of 4</span>
         </div>
-      </div>
+      </header>
 
-      {/* Wizard Content */}
-      <div className="max-w-3xl mx-auto w-full my-auto py-6">
+      {/* Scrollable Wizard Content */}
+      <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
+        <div className="max-w-3xl mx-auto w-full my-auto py-2">
         {/* STEP 1: Student Academic & Profile Details */}
         {currentStep === 1 && (
           <div className="space-y-6 max-w-2xl mx-auto">
@@ -371,48 +379,91 @@ export const OnboardingPage: React.FC = () => {
 
         {/* STEP 2: Target Career Role Selection */}
         {currentStep === 2 && (
-          <div className="space-y-8">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-normal text-[#202124] tracking-tight">
+          <div className="space-y-5 sm:space-y-6">
+            <div className="text-center space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl font-normal text-[#202124] tracking-tight">
                 What career are you working toward?
               </h1>
-              <p className="text-sm text-[#5f6368]">
+              <p className="text-xs sm:text-sm text-[#5f6368] max-w-md mx-auto">
                 Select your target role to generate your tailored curriculum & skill benchmarks.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-              {careerOptions.map((opt) => {
+            {/* Balanced Rows & Columns: 2 cols on mobile/tablet, 4 cols on desktop with 7th card spanning */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+              {careerOptions.map((opt, index) => {
                 const Icon = opt.icon;
                 const isSelected = targetRole === opt.role;
+                const isLast = index === careerOptions.length - 1;
+
                 return (
                   <button
                     key={opt.role}
                     type="button"
                     onClick={() => setTargetRole(opt.role)}
-                    className={`p-5 rounded-xl border text-left transition-all flex flex-col justify-between h-32 relative cursor-pointer ${
+                    className={`p-3 sm:p-4 rounded-xl border text-left transition-all relative cursor-pointer flex flex-col justify-between min-h-[96px] sm:min-h-[112px] ${
                       isSelected
-                        ? 'border-[#1a73e8] bg-[#e8f0fe]/40 ring-1 ring-[#1a73e8]'
-                        : 'border-[#dadce0] bg-white hover:border-[#bdc1c6] hover:bg-[#f8f9fa]'
-                    }`}
+                        ? 'border-[#1a73e8] bg-[#e8f0fe]/60 ring-2 ring-[#1a73e8] shadow-xs'
+                        : 'border-[#dadce0] bg-white hover:border-[#1a73e8]/40 hover:bg-[#f8f9fa] shadow-2xs'
+                    } ${isLast ? 'col-span-2 lg:col-span-2' : ''}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                          isSelected ? 'bg-[#1a73e8] text-white' : 'bg-[#f1f3f4] text-[#5f6368]'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 stroke-[1.8]" />
+                    {isLast ? (
+                      /* Balanced Wide Card for Software Developer across 2 columns */
+                      <div className="flex items-center justify-between gap-3 w-full h-full">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                              isSelected ? 'bg-[#1a73e8] text-white shadow-xs' : 'bg-[#f1f3f4] text-[#5f6368]'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.8]" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className={`text-xs sm:text-sm font-medium block leading-tight truncate ${isSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
+                              {opt.role}
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] text-[#5f6368] block mt-0.5 truncate">
+                              {opt.skills}
+                            </span>
+                          </div>
+                        </div>
+                        {isSelected ? (
+                          <div className="w-5 h-5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center shadow-xs shrink-0">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </div>
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border-2 border-[#dadce0] shrink-0" />
+                        )}
                       </div>
-                      {isSelected && (
-                        <CheckCircle2 className="w-5 h-5 text-[#1a73e8]" />
-                      )}
-                    </div>
-                    <div>
-                      <span className={`text-sm font-medium block ${isSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
-                        {opt.role}
-                      </span>
-                    </div>
+                    ) : (
+                      /* Standard Grid Card */
+                      <>
+                        <div className="flex items-start justify-between w-full mb-1.5 sm:mb-2">
+                          <div
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors ${
+                              isSelected ? 'bg-[#1a73e8] text-white shadow-xs' : 'bg-[#f1f3f4] text-[#5f6368]'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.8]" />
+                          </div>
+                          {isSelected ? (
+                            <div className="w-5 h-5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center shadow-xs">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </div>
+                          ) : (
+                            <div className="w-4 h-4 rounded-full border-2 border-[#dadce0]" />
+                          )}
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className={`text-xs sm:text-sm font-medium block leading-tight truncate ${isSelected ? 'text-[#1967d2]' : 'text-[#202124]'}`}>
+                            {opt.role}
+                          </span>
+                          <span className="text-[10px] sm:text-[11px] text-[#5f6368] block leading-tight truncate">
+                            {opt.skills}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </button>
                 );
               })}
@@ -525,32 +576,35 @@ export const OnboardingPage: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </main>
 
-      {/* Bottom Navigation Buttons */}
-      <div className="max-w-4xl mx-auto w-full flex items-center justify-between pt-6 border-t border-[#dadce0]">
-        {currentStep > 1 ? (
+      {/* Static Bottom Navigation Buttons */}
+      <footer className="shrink-0 bg-white border-t border-[#dadce0] px-4 sm:px-8 py-3.5 z-30 shadow-xs">
+        <div className="max-w-4xl mx-auto w-full flex items-center justify-between">
+          {currentStep > 1 ? (
+            <button
+              type="button"
+              onClick={() => setCurrentStep(currentStep - 1)}
+              className="px-5 py-2 rounded-full border border-[#dadce0] text-[#3c4043] hover:bg-[#f1f3f4] text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+          ) : (
+            <div />
+          )}
+
           <button
             type="button"
-            onClick={() => setCurrentStep(currentStep - 1)}
-            className="px-5 py-2 rounded-full border border-[#dadce0] text-[#3c4043] hover:bg-[#f1f3f4] text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            onClick={handleNext}
+            className="px-6 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557d0] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span>{currentStep === 4 ? 'Launch Dashboard' : 'Next'}</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
-        ) : (
-          <div />
-        )}
-
-        <button
-          type="button"
-          onClick={handleNext}
-          className="px-6 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557d0] text-white text-sm font-medium transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
-        >
-          <span>{currentStep === 4 ? 'Launch Dashboard' : 'Next'}</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 };

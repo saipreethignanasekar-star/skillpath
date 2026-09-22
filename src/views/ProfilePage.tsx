@@ -21,7 +21,11 @@ import {
   Globe,
   Link,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Copy,
+  Check,
+  Mail,
+  Smartphone
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -29,6 +33,7 @@ export const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'projects' | 'certifications' | 'achievements'>('projects');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
   const [savedToast, setSavedToast] = useState<boolean>(false);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
 
@@ -66,10 +71,61 @@ export const ProfilePage: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href);
+  const getShareUrl = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+    return 'https://skillpath.app/profile';
+  };
+
+  const shareText = `Check out ${user.name || 'my'}'s student profile on SkillPath (${user.targetRole || 'Software Engineer'} track)!`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(getShareUrl());
     setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${user.name || 'Student'} - SkillPath Profile`,
+          text: shareText,
+          url: getShareUrl()
+        });
+      } catch {
+        // Fallback to copy if user cancelled or failed
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  const handleWhatsAppShare = () => {
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${getShareUrl()}`)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleLinkedInShare = () => {
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl())}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleTwitterShare = () => {
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(getShareUrl())}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleTelegramShare = () => {
+    const url = `https://t.me/share/url?url=${encodeURIComponent(getShareUrl())}&text=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleEmailShare = () => {
+    const subject = encodeURIComponent(`${user.name || 'Student'} SkillPath Profile`);
+    const body = encodeURIComponent(`Hi,\n\nTake a look at ${user.name || 'my'}'s student profile on SkillPath:\n${getShareUrl()}\n\nTarget Track: ${user.targetRole || 'Software Engineer'}\nCareer Readiness: ${user.careerReadiness}%`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -234,11 +290,11 @@ export const ProfilePage: React.FC = () => {
           </button>
 
           <button
-            onClick={handleShare}
+            onClick={() => setIsShareModalOpen(true)}
             className="flex-1 md:flex-initial px-5 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557d0] text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
           >
-            {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{copiedLink ? 'Link Copied!' : 'Share profile'}</span>
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Share profile</span>
           </button>
         </div>
       </div>
@@ -810,6 +866,243 @@ export const ProfilePage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= SHARE PROFILE POP-UP MODAL ================= */}
+      {isShareModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="bg-white w-full max-w-lg rounded-2xl border border-[#dadce0] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="share-profile-title"
+          >
+            {/* Share Modal Header */}
+            <div className="px-6 py-4 border-b border-[#dadce0] flex items-center justify-between bg-[#f8f9fa] shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center">
+                  <Share2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 id="share-profile-title" className="text-base font-medium text-[#202124]">
+                    Share Profile
+                  </h3>
+                  <p className="text-xs text-[#5f6368]">
+                    Share your verified skill progress & credentials
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(false)}
+                className="p-1.5 rounded-full text-[#5f6368] hover:text-[#202124] hover:bg-[#e8eaed] transition-colors cursor-pointer"
+                aria-label="Close share modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Share Modal Body */}
+            <div className="p-6 space-y-5 overflow-y-auto">
+              {/* Profile Card Preview Snapshot */}
+              <div className="p-4 rounded-xl border border-[#dadce0] bg-[#f8f9fa] flex items-center gap-3.5">
+                {isAvatarValid ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name || 'Student'}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-[#dadce0] shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a73e8] to-[#1557d0] text-white flex items-center justify-center text-lg font-medium ring-2 ring-[#dadce0] shrink-0">
+                    {userInitial}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-sm font-medium text-[#202124] truncate">
+                      {user.name || 'Student Profile'}
+                    </h4>
+                    <span className="p-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#1a73e8] font-medium truncate">
+                    {user.targetRole || 'Software Track'}
+                  </p>
+                  <p className="text-[11px] text-[#5f6368] truncate">
+                    {user.department ? `${user.department}` : ''}
+                    {user.department && user.college ? ' • ' : ''}
+                    {user.college || ''}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-[11px] font-medium px-2 py-0.5 bg-[#e8f0fe] text-[#1a73e8] rounded-full border border-[#d2e3fc]">
+                    {user.careerReadiness}% Ready
+                  </span>
+                </div>
+              </div>
+
+              {/* Direct Share Channels Grid */}
+              <div>
+                <label className="block text-xs font-medium text-[#5f6368] uppercase tracking-wider mb-3">
+                  Share directly via
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {/* WhatsApp */}
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppShare}
+                    className="p-3 rounded-xl border border-[#dadce0] hover:border-[#25D366] hover:bg-[#25D366]/5 transition-all flex items-center gap-2.5 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.972.531 1.777.82 2.796.82 3.183 0 5.768-2.587 5.769-5.766.001-3.182-2.585-5.767-5.77-5.767zm0-2c4.28 0 7.768 3.487 7.769 7.767 0 4.28-3.488 7.767-7.769 7.767-1.328 0-2.423-.328-3.535-.873l-4.542 1.189 1.213-4.425c-.659-1.144-.997-2.348-.997-3.658 0-4.28 3.488-7.767 7.861-7.767z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-[#202124]">WhatsApp</div>
+                      <div className="text-[10px] text-[#5f6368]">Chat / Groups</div>
+                    </div>
+                  </button>
+
+                  {/* LinkedIn */}
+                  <button
+                    type="button"
+                    onClick={handleLinkedInShare}
+                    className="p-3 rounded-xl border border-[#dadce0] hover:border-[#0A66C2] hover:bg-[#0A66C2]/5 transition-all flex items-center gap-2.5 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76c.86 0 1.55-.7 1.55-1.55s-.69-1.55-1.55-1.55c-.86 0-1.55.7-1.55 1.55s.69 1.55 1.55 1.55m1.39 9.74v-8.37H5.07v8.37h2.78z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-[#202124]">LinkedIn</div>
+                      <div className="text-[10px] text-[#5f6368]">Post to network</div>
+                    </div>
+                  </button>
+
+                  {/* X / Twitter */}
+                  <button
+                    type="button"
+                    onClick={handleTwitterShare}
+                    className="p-3 rounded-xl border border-[#dadce0] hover:border-[#202124] hover:bg-[#202124]/5 transition-all flex items-center gap-2.5 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#202124]/10 text-[#202124] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-[#202124]">X (Twitter)</div>
+                      <div className="text-[10px] text-[#5f6368]">Tweet profile</div>
+                    </div>
+                  </button>
+
+                  {/* Telegram */}
+                  <button
+                    type="button"
+                    onClick={handleTelegramShare}
+                    className="p-3 rounded-xl border border-[#dadce0] hover:border-[#229ED9] hover:bg-[#229ED9]/5 transition-all flex items-center gap-2.5 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#229ED9]/10 text-[#229ED9] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-[#202124]">Telegram</div>
+                      <div className="text-[10px] text-[#5f6368]">Direct Message</div>
+                    </div>
+                  </button>
+
+                  {/* Email */}
+                  <button
+                    type="button"
+                    onClick={handleEmailShare}
+                    className="p-3 rounded-xl border border-[#dadce0] hover:border-[#EA4335] hover:bg-[#EA4335]/5 transition-all flex items-center gap-2.5 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#EA4335]/10 text-[#EA4335] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-[#202124]">Email</div>
+                      <div className="text-[10px] text-[#5f6368]">Send to recruiter</div>
+                    </div>
+                  </button>
+
+                  {/* Native Device Share / More Apps */}
+                  <button
+                    type="button"
+                    onClick={handleNativeShare}
+                    className="p-3 rounded-xl border border-[#dadce0] hover:border-[#1a73e8] hover:bg-[#e8f0fe] transition-all flex items-center gap-2.5 text-left group cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-[#202124]">More Apps</div>
+                      <div className="text-[10px] text-[#5f6368]">Device Sheet / AirDrop</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Copy Profile Link Section */}
+              <div>
+                <label className="block text-xs font-medium text-[#5f6368] uppercase tracking-wider mb-2">
+                  Or copy shareable link
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      readOnly
+                      value={getShareUrl()}
+                      className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-[#f8f9fa] rounded-xl border border-[#dadce0] text-[#3c4043] focus:outline-none select-all font-mono"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-2xs ${
+                      copiedLink
+                        ? 'bg-[#e6f4ea] text-[#137333] border border-[#ceead6]'
+                        : 'bg-[#1a73e8] hover:bg-[#1557d0] text-white border border-transparent'
+                    }`}
+                  >
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 border-t border-[#dadce0] flex items-center justify-between bg-[#f8f9fa] shrink-0">
+              <span className="text-[11px] text-[#5f6368] flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-[#1a73e8]" />
+                <span>Verified student credentials are viewable by anyone with the link</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(false)}
+                className="px-4 py-1.5 rounded-full bg-white border border-[#dadce0] hover:bg-[#e8eaed] text-[#3c4043] text-xs font-medium transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
