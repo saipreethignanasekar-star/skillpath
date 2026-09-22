@@ -41,7 +41,7 @@ interface AppContextType {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
   isLoggedIn: boolean;
-  login: (email: string) => void;
+  login: (email: string, profileData?: Partial<UserProfile>) => void;
   signup: (userData: Partial<UserProfile>) => void;
   logout: () => void;
   updateUserProfile: (updated: Partial<UserProfile>) => void;
@@ -599,9 +599,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     syncUserTargetRoleAndSkills(role, user.detectedSkills);
   };
 
-  const login = (email: string) => {
+  const login = (email: string, profileData?: Partial<UserProfile>) => {
     setIsLoggedIn(true);
-    setUser(prev => ({ ...prev, email: email || prev.email }));
+    setUser(prev => ({
+      ...prev,
+      email: email || prev.email,
+      ...(profileData || {})
+    }));
+    if (profileData?.targetRole) {
+      setTargetRoleState(profileData.targetRole);
+      syncUserTargetRoleAndSkills(profileData.targetRole, profileData.detectedSkills || user.detectedSkills);
+    }
     setActiveView('dashboard');
   };
 
