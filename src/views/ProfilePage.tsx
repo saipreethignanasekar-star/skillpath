@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { CircularProgress } from '../components/common/CircularProgress';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -29,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
-  const { user, targetRole, setActiveView, updateUserProfile } = useApp();
+  const { user, updateUserProfile } = useApp();
   const [activeTab, setActiveTab] = useState<'projects' | 'certifications' | 'achievements'>('projects');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -390,84 +389,6 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Career Readiness & Verified Skills Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Career Readiness Card */}
-        <div className="lg:col-span-4 bg-white p-6 rounded-xl border border-[#dadce0] shadow-xs flex flex-col items-center justify-center text-center">
-          <span className="text-xs font-medium text-[#5f6368] uppercase tracking-wider mb-2">
-            Career Readiness
-          </span>
-          <CircularProgress
-            value={user.careerReadiness}
-            size={140}
-            strokeWidth={10}
-            color="#1a73e8"
-          />
-          <div className="mt-3">
-            <span className="text-xs font-medium text-[#137333] bg-[#e6f4ea] px-2.5 py-0.5 rounded-full">
-              {user.readinessChange}
-            </span>
-            <div className="text-xs text-[#5f6368] mt-2">
-              Target: <strong className="text-[#202124] font-medium">{targetRole}</strong>
-            </div>
-          </div>
-        </div>
-
-        {/* Verified Skills Pills */}
-        <div className="lg:col-span-8 bg-white p-6 rounded-xl border border-[#dadce0] shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-base font-medium text-[#202124]">Verified Skills</h2>
-                <p className="text-xs text-[#5f6368]">Validated via SkillX practical assessments & automated rubrics</p>
-              </div>
-              <button
-                onClick={() => setActiveView('challenges')}
-                className="text-xs font-medium text-[#1a73e8] hover:underline cursor-pointer"
-              >
-                + Verify more
-              </button>
-            </div>
-
-            {user.verifiedSkills.length === 0 ? (
-              <div className="py-6 text-center text-xs text-[#5f6368] bg-[#f8f9fa] rounded-xl border border-[#dadce0]">
-                <p>No skills verified yet.</p>
-                <button
-                  onClick={() => setActiveView('challenges')}
-                  className="mt-2 text-[#1a73e8] font-medium hover:underline cursor-pointer"
-                >
-                  Take a skill challenge to get verified
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                {user.verifiedSkills.map((skill: string) => (
-                  <div
-                    key={skill}
-                    className="p-3 rounded-xl border border-[#ceead6] bg-[#e6f4ea]/40 flex items-center justify-between text-xs"
-                  >
-                    <span className="font-medium text-[#202124]">{skill}</span>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#137333]">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Verified</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-[#f1f3f4] flex items-center justify-between text-xs text-[#5f6368]">
-            <span>Verification badge ID: #SKX-2026-{user.name ? user.name.slice(0, 3).toUpperCase() : 'STU'}</span>
-            <button
-              onClick={() => alert('Certificate PDF generated for verified skills!')}
-              className="text-[#1a73e8] font-medium hover:underline cursor-pointer"
-            >
-              Download Credential PDF
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Tabs for Projects, Certifications, Achievements */}
       <div className="bg-white rounded-xl border border-[#dadce0] shadow-xs p-6">

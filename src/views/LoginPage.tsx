@@ -149,10 +149,10 @@ export const LoginPage: React.FC = () => {
 
         login(cleanEmail, data.user);
         return;
-      } else if (res.status === 401) {
-        setErrorMessage('Incorrect password. Please verify your credentials and try again.');
+      } else if (res.status === 401 || data.code === 'WRONG_PASSWORD') {
+        setErrorMessage('Wrong password. Please check and try again.');
         return;
-      } else if (res.status === 404) {
+      } else if (res.status === 404 || data.code === 'USER_NOT_FOUND') {
         const fallback = verifyLocalBrowserFallback(cleanEmail, password);
         if (fallback.found) {
           if (fallback.passwordMatch) {
@@ -173,11 +173,11 @@ export const LoginPage: React.FC = () => {
             login(cleanEmail, fallback.user);
             return;
           } else {
-            setErrorMessage('Incorrect password. Please verify your credentials and try again.');
+            setErrorMessage('Wrong password. Please check and try again.');
             return;
           }
         }
-        setErrorMessage('No account found with this email in the database. Please sign up.');
+        setErrorMessage('No account found with this email address. Please sign up.');
         return;
       } else {
         setErrorMessage(data.message || 'Login failed. Please check your credentials.');
@@ -198,7 +198,7 @@ export const LoginPage: React.FC = () => {
         login(cleanEmail, fallback.user);
         return;
       } else if (fallback.found && !fallback.passwordMatch) {
-        setErrorMessage('Incorrect password. Please try again.');
+        setErrorMessage('Wrong password. Please check and try again.');
         return;
       }
       setErrorMessage('Unable to connect to authentication server. Please verify the backend is running.');
