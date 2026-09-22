@@ -34,6 +34,13 @@ export interface UserProfile {
   avatar: string;
   college: string;
   currentYear: string;
+  department?: string;
+  rollNumber?: string;
+  cgpa?: string;
+  graduationYear?: string;
+  bio?: string;
+  githubUrl?: string;
+  linkedinUrl?: string;
   targetRole: CareerRole;
   careerReadiness: number;
   readinessChange: string;

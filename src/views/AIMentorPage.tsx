@@ -28,7 +28,7 @@ export const AIMentorPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4 pb-12 max-w-4xl mx-auto flex flex-col h-[calc(100vh-7rem)]">
+    <div className="space-y-4 pb-4 max-w-4xl mx-auto flex flex-col min-h-[480px] h-[calc(100dvh-13rem)] lg:h-[calc(100vh-7rem)]">
       {/* Top Banner */}
       <div className="flex items-center justify-between">
         <div>

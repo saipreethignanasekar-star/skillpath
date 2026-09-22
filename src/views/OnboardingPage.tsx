@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   Compass,
@@ -12,14 +12,31 @@ import {
   ArrowRight,
   ArrowLeft,
   Upload,
-  CheckCircle2
+  CheckCircle2,
+  GraduationCap,
+  Camera,
+  Trash2
 } from 'lucide-react';
 import type { CareerRole } from '../types';
 
 export const OnboardingPage: React.FC = () => {
-  const { user, targetRole, setTargetRole, setActiveView, uploadResumeSimulated, uploadResumeFile } = useApp();
+  const { user, targetRole, setTargetRole, setActiveView, uploadResumeFile, updateUserProfile } = useApp();
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [experienceLevel, setExperienceLevel] = useState<string>('Student / Fresher');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [studentForm, setStudentForm] = useState({
+    name: user.name || '',
+    college: user.college || '',
+    department: user.department || '',
+    currentYear: user.currentYear || '',
+    rollNumber: user.rollNumber || '',
+    cgpa: user.cgpa || '',
+    graduationYear: user.graduationYear || '',
+    bio: user.bio || '',
+    avatar: user.avatar || ''
+  });
+
+  const [stepError, setStepError] = useState<string | null>(null);
 
   const careerOptions: { role: CareerRole; icon: React.FC<{ className?: string }> }[] = [
     { role: 'Cloud Engineer', icon: Cloud },
@@ -31,7 +48,63 @@ export const OnboardingPage: React.FC = () => {
     { role: 'Software Developer', icon: Code },
   ];
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setStudentForm(prev => ({ ...prev, avatar: base64String }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setStudentForm(prev => ({ ...prev, avatar: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleNext = async () => {
+    setStepError(null);
+
+    // Validate Step 1
+    if (currentStep === 1) {
+      if (!studentForm.name.trim()) {
+        setStepError('Please enter your full name to create your profile.');
+        return;
+      }
+      if (!studentForm.college.trim()) {
+        setStepError('Please enter your college / university name.');
+        return;
+      }
+      if (!studentForm.department.trim()) {
+        setStepError('Please enter or select your department / branch.');
+        return;
+      }
+      if (!studentForm.currentYear.trim()) {
+        setStepError('Please select your current academic year.');
+        return;
+      }
+
+      updateUserProfile({
+        name: studentForm.name.trim(),
+        college: studentForm.college.trim(),
+        department: studentForm.department.trim(),
+        currentYear: studentForm.currentYear.trim(),
+        rollNumber: studentForm.rollNumber.trim(),
+        cgpa: studentForm.cgpa.trim(),
+        graduationYear: studentForm.graduationYear.trim(),
+        bio: studentForm.bio.trim(),
+        avatar: studentForm.avatar
+      });
+
+      setCurrentStep(2);
+      return;
+    }
+
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -76,15 +149,235 @@ export const OnboardingPage: React.FC = () => {
       </div>
 
       {/* Wizard Content */}
-      <div className="max-w-3xl mx-auto w-full my-auto py-8">
+      <div className="max-w-3xl mx-auto w-full my-auto py-6">
+        {/* STEP 1: Student Academic & Profile Details */}
         {currentStep === 1 && (
+          <div className="space-y-6 max-w-2xl mx-auto">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center mx-auto mb-2">
+                <GraduationCap className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-normal text-[#202124] tracking-tight">
+                Create your student profile
+              </h1>
+              <p className="text-xs sm:text-sm text-[#5f6368]">
+                Provide your academic and background details to personalize your career journey.
+              </p>
+            </div>
+
+            {stepError && (
+              <div className="p-3 bg-[#fce8e6] border border-[#f5c6cb] text-[#d93025] rounded-xl text-xs font-medium text-center">
+                {stepError}
+              </div>
+            )}
+
+            <div className="bg-white p-6 sm:p-8 rounded-2xl border border-[#dadce0] shadow-xs space-y-5">
+              {/* Photo Upload Section */}
+              <div className="bg-[#f8f9fa] p-4 rounded-xl border border-[#dadce0]">
+                <label className="block text-xs font-medium text-[#202124] mb-2">
+                  Profile Photo (Optional)
+                </label>
+                <div className="flex items-center gap-4">
+                  {studentForm.avatar ? (
+                    <img
+                      src={studentForm.avatar}
+                      alt="Preview"
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-[#dadce0] shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1a73e8] to-[#1557d0] text-white flex items-center justify-center text-lg font-medium ring-2 ring-[#dadce0] shrink-0">
+                      {studentForm.name ? studentForm.name.trim().charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+
+                  <div className="flex-1 space-y-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handlePhotoUpload}
+                      accept="image/*"
+                      className="hidden"
+                      id="onboarding-photo-upload"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <label
+                        htmlFor="onboarding-photo-upload"
+                        className="px-3 py-1.5 rounded-lg bg-white border border-[#dadce0] hover:bg-[#f1f3f4] text-[#3c4043] text-xs font-medium cursor-pointer flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Camera className="w-3.5 h-3.5 text-[#1a73e8]" />
+                        <span>Upload photo</span>
+                      </label>
+                      {studentForm.avatar && (
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="px-3 py-1.5 rounded-lg bg-white border border-[#dadce0] hover:bg-[#fce8e6] hover:text-[#d93025] hover:border-[#f5c6cb] text-[#5f6368] text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#5f6368]">
+                      Upload from your device, or first letter initial will be used automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Fields Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    Full Name <span className="text-[#d93025]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={studentForm.name}
+                    onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  />
+                </div>
+
+                {/* College / University */}
+                <div>
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    College / University <span className="text-[#d93025]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={studentForm.college}
+                    onChange={(e) => setStudentForm({ ...studentForm, college: e.target.value })}
+                    placeholder="e.g. National Institute of Technology"
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  />
+                </div>
+
+                {/* Department / Branch */}
+                <div>
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    Department / Branch <span className="text-[#d93025]">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    list="onboarding-departments"
+                    required
+                    value={studentForm.department}
+                    onChange={(e) => setStudentForm({ ...studentForm, department: e.target.value })}
+                    placeholder="e.g. Computer Science and Engineering"
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  />
+                  <datalist id="onboarding-departments">
+                    <option value="Computer Science and Engineering" />
+                    <option value="Information Technology" />
+                    <option value="Artificial Intelligence & Data Science" />
+                    <option value="Electronics & Communication Engineering" />
+                    <option value="Electrical & Electronics Engineering" />
+                    <option value="Mechanical Engineering" />
+                    <option value="Civil Engineering" />
+                    <option value="Cybersecurity & Forensics" />
+                  </datalist>
+                </div>
+
+                {/* Current Academic Year */}
+                <div>
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    Current Academic Year <span className="text-[#d93025]">*</span>
+                  </label>
+                  <select
+                    value={studentForm.currentYear}
+                    onChange={(e) => setStudentForm({ ...studentForm, currentYear: e.target.value })}
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  >
+                    <option value="">Select current year</option>
+                    <option value="1st Year">1st Year (Freshman)</option>
+                    <option value="2nd Year">2nd Year (Sophomore)</option>
+                    <option value="3rd Year">3rd Year (Junior)</option>
+                    <option value="4th Year (Final Year)">4th Year (Final Year)</option>
+                    <option value="Postgraduate / Masters">Postgraduate / Masters</option>
+                    <option value="Recent Graduate">Recent Graduate</option>
+                  </select>
+                </div>
+
+                {/* Roll Number / Student ID */}
+                <div>
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    Roll Number / Student ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={studentForm.rollNumber}
+                    onChange={(e) => setStudentForm({ ...studentForm, rollNumber: e.target.value })}
+                    placeholder="e.g. 21CS049"
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  />
+                </div>
+
+                {/* CGPA / Percentage */}
+                <div>
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    CGPA / Academic Score (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={studentForm.cgpa}
+                    onChange={(e) => setStudentForm({ ...studentForm, cgpa: e.target.value })}
+                    placeholder="e.g. 8.75 / 10 or 85%"
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  />
+                </div>
+
+                {/* Expected Graduation Year */}
+                <div>
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    Expected Graduation Year
+                  </label>
+                  <select
+                    value={studentForm.graduationYear}
+                    onChange={(e) => setStudentForm({ ...studentForm, graduationYear: e.target.value })}
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124]"
+                  >
+                    <option value="">Select graduation year</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                  </select>
+                </div>
+
+                {/* Bio / Career Objective */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-[#202124] mb-1.5">
+                    Short Bio / Career Objective (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={studentForm.bio}
+                    onChange={(e) => setStudentForm({ ...studentForm, bio: e.target.value })}
+                    placeholder="Briefly describe your career aspirations or student background..."
+                    className="w-full px-3.5 py-2 text-xs sm:text-sm bg-white rounded-lg border border-[#dadce0] focus:border-[#1a73e8] focus:ring-2 focus:ring-[#1a73e8]/20 focus:outline-none transition-all text-[#202124] resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Target Career Role Selection */}
+        {currentStep === 2 && (
           <div className="space-y-8">
             <div className="text-center space-y-2">
               <h1 className="text-3xl sm:text-4xl font-normal text-[#202124] tracking-tight">
                 What career are you working toward?
               </h1>
               <p className="text-sm text-[#5f6368]">
-                Select the target role you'd like to prepare for.
+                Select your target role to generate your tailored curriculum & skill benchmarks.
               </p>
             </div>
 
@@ -97,7 +390,7 @@ export const OnboardingPage: React.FC = () => {
                     key={opt.role}
                     type="button"
                     onClick={() => setTargetRole(opt.role)}
-                    className={`p-5 rounded-xl border text-left transition-all flex flex-col justify-between h-32 relative ${
+                    className={`p-5 rounded-xl border text-left transition-all flex flex-col justify-between h-32 relative cursor-pointer ${
                       isSelected
                         ? 'border-[#1a73e8] bg-[#e8f0fe]/40 ring-1 ring-[#1a73e8]'
                         : 'border-[#dadce0] bg-white hover:border-[#bdc1c6] hover:bg-[#f8f9fa]'
@@ -127,41 +420,7 @@ export const OnboardingPage: React.FC = () => {
           </div>
         )}
 
-        {currentStep === 2 && (
-          <div className="space-y-6 max-w-xl mx-auto">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-normal text-[#202124] tracking-tight">
-                What is your experience level?
-              </h2>
-              <p className="text-sm text-[#5f6368]">
-                Helps tailor the roadmap pacing and complexity.
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-4">
-              {[
-                { title: 'Beginner / First-Year Student', desc: 'Starting from fundamental computer science principles' },
-                { title: 'Student / Fresher', desc: 'Have completed basic coursework and ready for industry tools' },
-                { title: 'Early Career Professional', desc: '1-2 years experience looking to upskill or transition' },
-              ].map(item => (
-                <button
-                  key={item.title}
-                  type="button"
-                  onClick={() => setExperienceLevel(item.title)}
-                  className={`w-full p-4 rounded-xl border text-left transition-all ${
-                    experienceLevel === item.title
-                      ? 'border-[#1a73e8] bg-[#e8f0fe]/40 ring-1 ring-[#1a73e8]'
-                      : 'border-[#dadce0] bg-white hover:border-[#bdc1c6]'
-                  }`}
-                >
-                  <div className="text-sm font-medium text-[#202124]">{item.title}</div>
-                  <div className="text-xs text-[#5f6368] mt-0.5">{item.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
+        {/* STEP 3: Resume Upload (Optional) */}
         {currentStep === 3 && (
           <div className="space-y-6 max-w-xl mx-auto text-center">
             <div className="space-y-2">
@@ -205,6 +464,7 @@ export const OnboardingPage: React.FC = () => {
           </div>
         )}
 
+        {/* STEP 4: Ready Confirmation & Profile Summary */}
         {currentStep === 4 && (
           <div className="space-y-6 max-w-lg mx-auto text-center">
             <div className="w-14 h-14 rounded-full bg-[#e6f4ea] text-[#137333] flex items-center justify-center mx-auto">
@@ -213,25 +473,54 @@ export const OnboardingPage: React.FC = () => {
 
             <div className="space-y-2">
               <h2 className="text-3xl font-normal text-[#202124] tracking-tight">
-                You're ready{user.name ? `, ${user.name.split(' ')[0]}` : ''}!
+                Your profile is ready{studentForm.name ? `, ${studentForm.name.split(' ')[0]}` : ''}!
               </h2>
               <p className="text-sm text-[#5f6368]">
                 We've customized your path for <strong className="text-[#202124] font-medium">{targetRole}</strong> with an initial baseline of <strong>{user.careerReadiness}%</strong>.
               </p>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-[#dadce0] text-left space-y-2.5">
-              <div className="flex justify-between text-xs">
-                <span className="text-[#5f6368]">Target role</span>
-                <span className="font-medium text-[#202124]">{targetRole}</span>
+            {/* Profile Overview Card */}
+            <div className="bg-white p-5 rounded-2xl border border-[#dadce0] text-left space-y-3 shadow-xs">
+              <div className="flex items-center gap-3 pb-3 border-b border-[#f1f3f4]">
+                {studentForm.avatar ? (
+                  <img src={studentForm.avatar} alt="Profile" className="w-10 h-10 rounded-full object-cover ring-1 ring-[#dadce0]" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-[#e8f0fe] text-[#1a73e8] flex items-center justify-center font-semibold text-sm">
+                    {studentForm.name ? studentForm.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium text-[#202124]">{studentForm.name || 'Student Name'}</div>
+                  <div className="text-xs text-[#5f6368]">
+                    {studentForm.department ? `${studentForm.department} • ` : ''}{studentForm.college || 'University'}
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-[#5f6368]">Initial readiness</span>
-                <span className="font-medium text-[#1a73e8]">{user.careerReadiness}%</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-[#5f6368]">Estimated duration</span>
-                <span className="font-medium text-[#202124]">{user.estimatedWeeks || 4} weeks</span>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-[#5f6368]">Target role</span>
+                  <span className="font-medium text-[#202124]">{targetRole}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5f6368]">Current status</span>
+                  <span className="font-medium text-[#202124]">{studentForm.currentYear || 'Student'}</span>
+                </div>
+                {studentForm.rollNumber && (
+                  <div className="flex justify-between">
+                    <span className="text-[#5f6368]">Student ID</span>
+                    <span className="font-medium text-[#202124]">{studentForm.rollNumber}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-[#5f6368]">Initial readiness</span>
+                  <span className="font-medium text-[#1a73e8]">{user.careerReadiness}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#5f6368]">Estimated duration</span>
+                  <span className="font-medium text-[#202124]">{user.estimatedWeeks || 4} weeks</span>
+                </div>
               </div>
             </div>
           </div>
@@ -244,7 +533,7 @@ export const OnboardingPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setCurrentStep(currentStep - 1)}
-            className="px-5 py-2 rounded-full border border-[#dadce0] text-[#3c4043] hover:bg-[#f1f3f4] text-sm font-medium flex items-center gap-1.5 transition-colors"
+            className="px-5 py-2 rounded-full border border-[#dadce0] text-[#3c4043] hover:bg-[#f1f3f4] text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -256,7 +545,7 @@ export const OnboardingPage: React.FC = () => {
         <button
           type="button"
           onClick={handleNext}
-          className="px-6 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557d0] text-white text-sm font-medium transition-colors shadow-xs flex items-center gap-1.5"
+          className="px-6 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557d0] text-white text-sm font-medium transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
         >
           <span>{currentStep === 4 ? 'Launch Dashboard' : 'Next'}</span>
           <ArrowRight className="w-4 h-4" />

@@ -43,6 +43,7 @@ interface AppContextType {
   login: (email: string) => void;
   signup: (userData: Partial<UserProfile>) => void;
   logout: () => void;
+  updateUserProfile: (updated: Partial<UserProfile>) => void;
   uploadResumeSimulated: (fileName: string) => Promise<void>;
   uploadResumeFile: (file: File) => Promise<void>;
   isAnalyzingResume: boolean;
@@ -53,6 +54,7 @@ interface AppContextType {
   sendChatMessage: (text: string) => void;
   applyForJob: (jobId: string) => void;
   appliedJobIds: string[];
+  resetAllData: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -313,23 +315,145 @@ export const ROLE_ROADMAP_TEMPLATES: Record<CareerRole, RoadmapPhase[]> = {
   ]
 };
 
+const STORAGE_KEYS = {
+  USER: 'skillx_user_profile',
+  IS_LOGGED_IN: 'skillx_is_logged_in',
+  TARGET_ROLE: 'skillx_target_role',
+  SKILLS: 'skillx_skills',
+  ROADMAP_PHASES: 'skillx_roadmap_phases',
+  CHALLENGE: 'skillx_challenge',
+  EVALUATION: 'skillx_evaluation',
+  CHAT_MESSAGES: 'skillx_chat_messages',
+  JOBS: 'skillx_jobs',
+  APPLIED_JOB_IDS: 'skillx_applied_job_ids',
+  ACTIVE_VIEW: 'skillx_active_view'
+} as const;
+
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const item = localStorage.getItem(key);
+    if (item === null) return fallback;
+    return JSON.parse(item);
+  } catch (error) {
+    console.warn(`Error loading "${key}" from localStorage:`, error);
+    return fallback;
+  }
+}
+
+function saveToStorage<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Error saving "${key}" to localStorage:`, error);
+  }
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
-  const [user, setUser] = useState<UserProfile>(initialProfile);
-  const [targetRole, setTargetRoleState] = useState<CareerRole>('Cloud Engineer');
-  const [skills, setSkills] = useState<SkillItem[]>(defaultSkills);
-  const [roadmapPhases, setRoadmapPhases] = useState<RoadmapPhase[]>(defaultRoadmapPhases);
-  const [challenge, setChallenge] = useState<ChallengeItem>(defaultChallenge);
-  const [evaluation, setEvaluation] = useState<ChallengeEvaluation>(defaultEvaluation);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
-  const [jobs, setJobs] = useState<JobItem[]>(defaultJobs);
+  const [activeView, setActiveView] = useState<ActiveView>(() => {
+    const savedLoggedIn = loadFromStorage<boolean | null>(STORAGE_KEYS.IS_LOGGED_IN, null);
+    if (savedLoggedIn === false) return 'login';
+    const savedView = loadFromStorage<ActiveView | null>(STORAGE_KEYS.ACTIVE_VIEW, null);
+    return savedView || 'dashboard';
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    const saved = loadFromStorage<boolean | null>(STORAGE_KEYS.IS_LOGGED_IN, null);
+    return saved !== null ? saved : true;
+  });
+  const [user, setUser] = useState<UserProfile>(() => {
+    const saved = loadFromStorage<Partial<UserProfile> | null>(STORAGE_KEYS.USER, null);
+    if (!saved) return initialProfile;
+    return {
+      ...initialProfile,
+      ...saved,
+      verifiedSkills: saved.verifiedSkills || initialProfile.verifiedSkills || [],
+      detectedSkills: saved.detectedSkills || initialProfile.detectedSkills || [],
+      recentActivity: saved.recentActivity || initialProfile.recentActivity || []
+    };
+  });
+  const [targetRole, setTargetRoleState] = useState<CareerRole>(() => {
+    const saved = loadFromStorage<CareerRole | null>(STORAGE_KEYS.TARGET_ROLE, null);
+    return saved || 'Cloud Engineer';
+  });
+  const [skills, setSkills] = useState<SkillItem[]>(() => {
+    const saved = loadFromStorage<SkillItem[] | null>(STORAGE_KEYS.SKILLS, null);
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : defaultSkills;
+  });
+  const [roadmapPhases, setRoadmapPhases] = useState<RoadmapPhase[]>(() => {
+    const saved = loadFromStorage<RoadmapPhase[] | null>(STORAGE_KEYS.ROADMAP_PHASES, null);
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : defaultRoadmapPhases;
+  });
+  const [challenge, setChallenge] = useState<ChallengeItem>(() => {
+    const saved = loadFromStorage<ChallengeItem | null>(STORAGE_KEYS.CHALLENGE, null);
+    return saved ? { ...defaultChallenge, ...saved } : defaultChallenge;
+  });
+  const [evaluation, setEvaluation] = useState<ChallengeEvaluation>(() => {
+    const saved = loadFromStorage<ChallengeEvaluation | null>(STORAGE_KEYS.EVALUATION, null);
+    return saved ? { ...defaultEvaluation, ...saved } : defaultEvaluation;
+  });
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    const saved = loadFromStorage<ChatMessage[] | null>(STORAGE_KEYS.CHAT_MESSAGES, null);
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : initialChatMessages;
+  });
+  const [jobs, setJobs] = useState<JobItem[]>(() => {
+    const saved = loadFromStorage<JobItem[] | null>(STORAGE_KEYS.JOBS, null);
+    return saved && Array.isArray(saved) && saved.length > 0 ? saved : defaultJobs;
+  });
   const [cohortStudents] = useState<StudentCohortMetric[]>(defaultCohortStudents);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-  const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<string[]>(() => {
+    const saved = loadFromStorage<string[] | null>(STORAGE_KEYS.APPLIED_JOB_IDS, null);
+    return saved && Array.isArray(saved) ? saved : [];
+  });
 
   const [isAnalyzingResume, setIsAnalyzingResume] = useState<boolean>(false);
   const [resumeScanStep, setResumeScanStep] = useState<number>(0);
+
+  // Sync state changes to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.ACTIVE_VIEW, activeView);
+  }, [activeView]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.IS_LOGGED_IN, isLoggedIn);
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.USER, user);
+  }, [user]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.TARGET_ROLE, targetRole);
+  }, [targetRole]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.SKILLS, skills);
+  }, [skills]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.ROADMAP_PHASES, roadmapPhases);
+  }, [roadmapPhases]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.CHALLENGE, challenge);
+  }, [challenge]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.EVALUATION, evaluation);
+  }, [evaluation]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.CHAT_MESSAGES, chatMessages);
+  }, [chatMessages]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.JOBS, jobs);
+  }, [jobs]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.APPLIED_JOB_IDS, appliedJobIds);
+  }, [appliedJobIds]);
 
   // Trigger celebration confetti
   const triggerConfetti = () => {
@@ -467,6 +591,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = () => {
     setIsLoggedIn(false);
     setActiveView('login');
+  };
+
+  const resetAllData = () => {
+    Object.values(STORAGE_KEYS).forEach(k => {
+      try {
+        localStorage.removeItem(k);
+      } catch (err) {
+        console.warn(`Error clearing ${k} from localStorage:`, err);
+      }
+    });
+    setUser(initialProfile);
+    setIsLoggedIn(true);
+    setTargetRoleState('Cloud Engineer');
+    setSkills(defaultSkills);
+    setRoadmapPhases(defaultRoadmapPhases);
+    setChallenge(defaultChallenge);
+    setEvaluation(defaultEvaluation);
+    setChatMessages(initialChatMessages);
+    setJobs(defaultJobs);
+    setAppliedJobIds([]);
+    setActiveView('dashboard');
+  };
+
+  const updateUserProfile = (updated: Partial<UserProfile>) => {
+    setUser(prev => ({
+      ...prev,
+      ...updated
+    }));
   };
 
   const uploadResumeSimulated = async (fileName: string) => {
@@ -754,6 +906,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         login,
         signup,
         logout,
+        updateUserProfile,
         uploadResumeSimulated,
         uploadResumeFile,
         isAnalyzingResume,
@@ -763,7 +916,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addVerifiedSkillFromEvaluation,
         sendChatMessage,
         applyForJob,
-        appliedJobIds
+        appliedJobIds,
+        resetAllData
       }}
     >
       {children}

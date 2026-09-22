@@ -15,6 +15,29 @@ import {
 export const StudentDashboard: React.FC = () => {
   const { user, skills, setActiveView, targetRole } = useApp();
 
+  // Filter for skills the user possesses (from resume, roadmap, or verified)
+  const acquiredSkills = React.useMemo(() => {
+    const fromSkills = skills.filter((s) => s.fromResume || s.fromRoadmap || s.verified || s.userScore > 0);
+    const seenNames = new Set(fromSkills.map((s) => s.name.toLowerCase()));
+
+    const additional = (user.verifiedSkills || [])
+      .filter((name) => !seenNames.has(name.toLowerCase()))
+      .map((name, idx) => ({
+        id: `extra_ver_${idx}_${name}`,
+        name,
+        category: 'Verified Skill',
+        userScore: 80,
+        requiredScore: 70,
+        gap: 10,
+        status: 'Strong' as const,
+        verified: true,
+        fromResume: false,
+        fromRoadmap: false
+      }));
+
+    return [...fromSkills, ...additional];
+  }, [skills, user.verifiedSkills]);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Greeting */}
@@ -78,11 +101,11 @@ export const StudentDashboard: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-medium text-[#202124] leading-none">Your Skills</h2>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#1967d2] font-medium border border-[#d2e3fc]">
-                  Resume & Roadmap Synced
+                  {acquiredSkills.length > 0 ? `${acquiredSkills.length} Skills Acquired` : 'Resume & Roadmap Synced'}
                 </span>
               </div>
               <p className="text-xs text-[#5f6368] mt-1">
-                Proficiency tracked from your uploaded resume and roadmap milestones.
+                Skills identified from your uploaded resume and completed learning milestones.
               </p>
             </div>
             <button
@@ -94,55 +117,44 @@ export const StudentDashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="space-y-3.5 flex-1 justify-center flex flex-col my-1">
-            {skills.length === 0 ? (
+          <div className="flex-1 justify-center flex flex-col my-1">
+            {acquiredSkills.length === 0 ? (
               <div className="py-8 text-center text-xs text-[#5f6368] space-y-2">
                 <p>No skills detected yet.</p>
                 <button
                   onClick={() => setActiveView('resume-analysis')}
-                  className="px-4 py-1.5 bg-[#e8f0fe] text-[#1a73e8] rounded-full font-medium hover:bg-[#d2e3fc] transition-colors"
+                  className="px-4 py-1.5 bg-[#e8f0fe] text-[#1a73e8] rounded-full font-medium hover:bg-[#d2e3fc] transition-colors cursor-pointer"
                 >
                   Upload Resume to Extract Skills
                 </button>
               </div>
             ) : (
-              skills.slice(0, 6).map((skill) => {
-                const color =
-                  skill.userScore >= 75
-                    ? 'bg-[#1e8e3e]'
-                    : skill.userScore >= 50
-                    ? 'bg-[#1a73e8]'
-                    : skill.userScore >= 30
-                    ? 'bg-[#e37400]'
-                    : 'bg-[#d93025]';
-
-                return (
-                  <div key={skill.id} className="space-y-1">
-                    <div className="flex justify-between items-center text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-[#3c4043]">{skill.name}</span>
-                        {skill.fromResume && (
-                          <span className="text-[10px] px-1.5 py-0.2 bg-[#f1f3f4] text-[#5f6368] rounded border border-[#dadce0]">
-                            Resume
-                          </span>
-                        )}
-                        {skill.fromRoadmap && (
-                          <span className="text-[10px] px-1.5 py-0.2 bg-[#e6f4ea] text-[#137333] rounded border border-[#ceead6]">
-                            Roadmap
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-medium text-[#202124]">{skill.userScore}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-[#e8eaed] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${color} rounded-full transition-all duration-700`}
-                        style={{ width: `${skill.userScore}%` }}
-                      />
-                    </div>
+              <div className="flex flex-wrap gap-2 py-1 max-h-[180px] overflow-y-auto content-start pr-1">
+                {acquiredSkills.map((skill) => (
+                  <div
+                    key={skill.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f8f9fa] border border-[#dadce0] hover:border-[#bdc1c6] transition-colors"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#137333] shrink-0" />
+                    <span className="text-xs font-medium text-[#202124]">{skill.name}</span>
+                    {skill.category && (
+                      <span className="text-[10px] text-[#5f6368] bg-white px-1.5 py-0.5 rounded border border-[#e8eaed]">
+                        {skill.category}
+                      </span>
+                    )}
+                    {skill.fromResume && (
+                      <span className="text-[10px] px-1.5 py-0.2 bg-[#f1f3f4] text-[#5f6368] rounded border border-[#dadce0]">
+                        Resume
+                      </span>
+                    )}
+                    {skill.fromRoadmap && (
+                      <span className="text-[10px] px-1.5 py-0.2 bg-[#e6f4ea] text-[#137333] rounded border border-[#ceead6]">
+                        Roadmap
+                      </span>
+                    )}
                   </div>
-                );
-              })
+                ))}
+              </div>
             )}
           </div>
 
@@ -154,7 +166,7 @@ export const StudentDashboard: React.FC = () => {
               onClick={() => setActiveView('roadmap')}
               className="text-[#1a73e8] hover:underline font-medium cursor-pointer"
             >
-              Complete roadmap modules to level up
+              Complete roadmap modules to unlock new skills
             </button>
           </div>
         </div>
